@@ -1,0 +1,32 @@
+package com.kanade.aipassage.service;
+
+import com.kanade.aipassage.model.dto.ArticleQueryRequest;
+import com.kanade.aipassage.model.dto.ArticleState;
+import com.kanade.aipassage.model.entity.User;
+import com.kanade.aipassage.model.enums.ArticleStatusEnum;
+import com.kanade.aipassage.model.vo.ArticleVO;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.service.IService;
+import com.kanade.aipassage.model.entity.Article;
+
+/**
+ * 文章表 服务层。
+ *
+ * @author kanade
+ */
+public interface ArticleService extends IService<Article> {
+
+    ArticleVO getArticleDetail(String taskId, User loginUser);
+    String createArticleTask(String topic, User loginUser);
+
+    boolean deleteArticle(Long id, User loginUser);
+
+    Page<ArticleVO> listArticleByPage(ArticleQueryRequest request, User loginUser);
+
+    Article getByTaskId(String taskId);
+
+    void updateArticleStatus(String taskId, ArticleStatusEnum articleStatusEnum, String message);
+
+    void saveArticleContent(String taskId, ArticleState state);
+
+}
