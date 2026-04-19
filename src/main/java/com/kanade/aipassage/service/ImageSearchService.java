@@ -1,16 +1,26 @@
 package com.kanade.aipassage.service;
 
+import com.kanade.aipassage.model.dto.ArticleState;
+import com.kanade.aipassage.model.dto.ImageData;
+import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
 
+/**
+ * 图片检索服务接口
+ * 抽象图片检索逻辑，便于扩展多种图片来源（如 Pexels、Unsplash、AI 生图等）
+ */
 public interface ImageSearchService {
 
+        // 请求获取图片
+        default String getImage(ImageRequest request){
+                String effectiveParam = request.getEffectiveParam(getMethod().isAiGenerated());
+                return searchImage(effectiveParam);
+        }
 
-    /**
-     * 图片检索服务接口
-     * 抽象图片检索逻辑，便于扩展多种图片来源（如 Pexels、Unsplash、AI 生图等）
-     */
-
-
+        default ImageData getImageData(ImageRequest request){
+                String image = getImage(request);
+                return ImageData.fromUrl(image);
+        }
         /**
          * 根据关键词检索图片
          *
@@ -34,5 +44,8 @@ public interface ImageSearchService {
          */
         String getFallbackImage(int position);
 
+        default boolean isAvailable(){
+                return true;
+        }
 
 }
