@@ -38,44 +38,44 @@ public class ArticleAgentService {
     private CosService cosService;
 
     // 执行agent
-    public void executeArticleGeneration(ArticleState state, Consumer<String> streamHandler) {
-        try {
-            // 智能体1：生成标题
-            log.info("智能体1：开始生成标题, taskId={}", state.getTaskId());
-            agent1GenerateTitle(state);
-            streamHandler.accept(SseMessageTypeEnum.AGENT1_COMPLETE.getValue());
-
-            // 智能体2：生成大纲（流式输出）
-            log.info("智能体2：开始生成大纲, taskId={}", state.getTaskId());
-            agent2GenerateOutline(state, streamHandler);
-            streamHandler.accept(SseMessageTypeEnum.AGENT2_COMPLETE.getValue());
-
-            // 智能体3：生成正文（流式输出）
-            log.info("智能体3：开始生成正文, taskId={}", state.getTaskId());
-            agent3GenerateContent(state, streamHandler);
-            streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
-
-            // 智能体4：分析配图需求
-            log.info("智能体4：开始分析配图需求, taskId={}", state.getTaskId());
-            agent4AnalyzeImageRequirements(state);
-            streamHandler.accept(SseMessageTypeEnum.AGENT4_COMPLETE.getValue());
-
-            // 智能体5：生成配图
-            log.info("智能体5：开始生成配图, taskId={}", state.getTaskId());
-            agent5GenerateImages(state, streamHandler);
-            streamHandler.accept(SseMessageTypeEnum.AGENT5_COMPLETE.getValue());
-
-            // 图文合成：将配图插入正文
-            log.info("开始图文合成, taskId={}", state.getTaskId());
-            mergeImagesIntoContent(state);
-            streamHandler.accept(SseMessageTypeEnum.MERGE_COMPLETE.getValue());
-
-            log.info("文章生成完成, taskId={}", state.getTaskId());
-        } catch (Exception e) {
-            log.error("文章生成失败, taskId={}", state.getTaskId(), e);
-            throw new RuntimeException("文章生成失败: " + e.getMessage(), e);
-        }
-    }
+//    public void executeArticleGeneration(ArticleState state, Consumer<String> streamHandler) {
+//        try {
+//            // 智能体1：生成标题
+//            log.info("智能体1：开始生成标题, taskId={}", state.getTaskId());
+//            executePhase1_GenerateTitles(state);
+//            streamHandler.accept(SseMessageTypeEnum.AGENT1_COMPLETE.getValue());
+//
+//            // 智能体2：生成大纲（流式输出）
+//            log.info("智能体2：开始生成大纲, taskId={}", state.getTaskId());
+//            agent2GenerateOutline(state, streamHandler);
+//            streamHandler.accept(SseMessageTypeEnum.AGENT2_COMPLETE.getValue());
+//
+//            // 智能体3：生成正文（流式输出）
+//            log.info("智能体3：开始生成正文, taskId={}", state.getTaskId());
+//            agent3GenerateContent(state, streamHandler);
+//            streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
+//
+//            // 智能体4：分析配图需求
+//            log.info("智能体4：开始分析配图需求, taskId={}", state.getTaskId());
+//            agent4AnalyzeImageRequirements(state);
+//            streamHandler.accept(SseMessageTypeEnum.AGENT4_COMPLETE.getValue());
+//
+//            // 智能体5：生成配图
+//            log.info("智能体5：开始生成配图, taskId={}", state.getTaskId());
+//            agent5GenerateImages(state, streamHandler);
+//            streamHandler.accept(SseMessageTypeEnum.AGENT5_COMPLETE.getValue());
+//
+//            // 图文合成：将配图插入正文
+//            log.info("开始图文合成, taskId={}", state.getTaskId());
+//            mergeImagesIntoContent(state);
+//            streamHandler.accept(SseMessageTypeEnum.MERGE_COMPLETE.getValue());
+//
+//            log.info("文章生成完成, taskId={}", state.getTaskId());
+//        } catch (Exception e) {
+//            log.error("文章生成失败, taskId={}", state.getTaskId(), e);
+//            throw new RuntimeException("文章生成失败: " + e.getMessage(), e);
+//        }
+//    }
 
     private void agent1GenerateTitle(ArticleState state) {
         String prompt = PromptConstant.AGENT1_TITLE_PROMPT.replace("{topic}",state.getTopic())
@@ -136,13 +136,36 @@ public class ArticleAgentService {
                 .replace("{content}", state.getContent());
 
         String content = callLlm(prompt);
-        List<ArticleState.ImageRequirement> imageRequirements = parseJsonListResponse(
-                content,
-                new TypeToken<List<ArticleState.ImageRequirement>>(){},
-                "配图需求"
-        );
-        state.setImageRequirements(imageRequirements);
-        log.info("智能体4：配图需求分析成功, count={}", imageRequirements.size());
+        
+        // 先解析外层对象
+        try {
+            com.google.gson.JsonObject jsonObject = GsonUtils.getInstance().fromJson(content, com.google.gson.JsonObject.class);
+            
+            // 提取 imageRequirements 数组
+            if (jsonObject.has("imageRequirements")) {
+                List<ArticleState.ImageRequirement> imageRequirements = GsonUtils.fromJson(
+                        jsonObject.get("imageRequirements").toString(),
+                        new TypeToken<List<ArticleState.ImageRequirement>>(){}
+                );
+                state.setImageRequirements(imageRequirements);
+                log.info("智能体4：配图需求分析成功, count={}", imageRequirements.size());
+            } else {
+                throw new RuntimeException("LLM 响应中缺少 imageRequirements 字段");
+            }
+            
+            // 如果还需要保存带占位符的内容，可以提取 contentWithPlaceholders
+            if (jsonObject.has("contentWithPlaceholders")) {
+                String contentWithPlaceholders = jsonObject.get("contentWithPlaceholders").getAsString();
+                // 关键：更新 state 的内容为带占位符的版本，这样后续才能正确替换
+                state.setContent(contentWithPlaceholders);
+                log.info("获取到带占位符的内容, length={}, placeholders will be replaced later", contentWithPlaceholders.length());
+            } else {
+                log.warn("LLM 响应中缺少 contentWithPlaceholders 字段，将无法插入图片");
+            }
+        } catch (Exception e) {
+            log.error("配图需求解析失败, content={}", content, e);
+            throw new RuntimeException("配图需求解析失败: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -195,23 +218,49 @@ public class ArticleAgentService {
         List<ArticleState.ImageResult> images = state.getImages();
 
         if (images == null || images.isEmpty()) {
+            log.warn("没有配图数据，直接返回原始内容");
             state.setFullContent(content);
             return;
         }
 
         String fullContent = content;
+        int replacedCount = 0;
 
         for (ArticleState.ImageResult image : images) {
             String placeholder = image.getPlaceholderId();
-            if (placeholder != null &&  !placeholder.isEmpty()){
-                String md = "![" + image.getDescription() +"]("+image.getUrl() +")";
-                fullContent = fullContent.replace(placeholder,md);
+            
+            // 跳过空占位符（如封面图可能没有占位符）
+            if (placeholder == null || placeholder.isEmpty()) {
+                log.debug("跳过无占位符的图片, position={}, type={}", image.getPosition(), image.getDescription());
+                continue;
+            }
+            
+            // 检查占位符是否存在于正文中
+            if (!fullContent.contains(placeholder)) {
+                log.warn("占位符不存在于正文中, placeholder={}, position={}", placeholder, image.getPosition());
+                continue;
+            }
+            
+            // 构建 Markdown 图片语法
+            String md = "![" + image.getDescription() +"]("+image.getUrl() +")";
+            
+            // 替换占位符
+            String beforeReplace = fullContent;
+            fullContent = fullContent.replace(placeholder, md);
+            
+            // 验证替换是否成功
+            if (!fullContent.equals(beforeReplace)) {
+                replacedCount++;
+                log.info("成功替换占位符, placeholder={}, position={}, url={}", 
+                        placeholder, image.getPosition(), image.getUrl());
+            } else {
+                log.warn("占位符替换失败, placeholder={}", placeholder);
             }
         }
 
-
-        state.setFullContent(fullContent.toString());
-        log.info("图文合成完成, fullContentLength={}", fullContent.length());
+        state.setFullContent(fullContent);
+        log.info("图文合成完成, originalLength={}, fullContentLength={}, replacedCount={}, totalImages={}", 
+                content.length(), fullContent.length(), replacedCount, images.size());
     }
     /**
      * 阶段1：生成标题方案（3-5个）

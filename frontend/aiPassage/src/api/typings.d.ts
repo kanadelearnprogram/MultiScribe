@@ -1,4 +1,21 @@
 declare namespace API {
+  type ArticleAiModifyOutlineRequest = {
+    taskId?: string;
+    modifySuggestion?: string;
+  };
+
+  type ArticleConfirmOutlineRequest = {
+    taskId?: string;
+    outline?: OutlineSection[];
+  };
+
+  type ArticleConfirmTitleRequest = {
+    taskId?: string;
+    selectedMainTitle?: string;
+    selectedSubTitle?: string;
+    userDescription?: string;
+  };
+
   type ArticleCreateRequest = {
     topic?: string;
     style?: string;
@@ -47,6 +64,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListOutlineSection = {
+    code?: number;
+    data?: OutlineSection[];
+    message?: string;
+  };
+
   type BaseResponseLoginUserVO = {
     code?: number;
     data?: LoginUserVO;
@@ -86,6 +109,12 @@ declare namespace API {
   type BaseResponseUserVO = {
     code?: number;
     data?: UserVO;
+    message?: string;
+  };
+
+  type BaseResponseVoid = {
+    code?: number;
+    data?: Record<string, any>;
     message?: string;
   };
 
@@ -130,6 +159,12 @@ declare namespace API {
   };
 
   type OutlineItem = {
+    section?: number;
+    title?: string;
+    points?: string[];
+  };
+
+  type OutlineSection = {
     section?: number;
     title?: string;
     points?: string[];

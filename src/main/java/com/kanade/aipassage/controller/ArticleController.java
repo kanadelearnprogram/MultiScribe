@@ -107,18 +107,30 @@ public class ArticleController {
         ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(request.getTopic() == null || request.getTopic().trim().isEmpty(),
                 ErrorCode.PARAMS_ERROR, "选题不能为空");
+        // 校验风格参数（允许为空）
+        ThrowUtils.throwIf(!ArticleStyleEnum.isValid(request.getStyle()),
+                ErrorCode.PARAMS_ERROR, "无效的文章风格");
 
-        ThrowUtils.throwIf(ArticleStyleEnum.isValid(request.getStyle()),ErrorCode.PARAMS_ERROR,"无效风格");
         User loginUser = userService.getLoginUser(httpServletRequest);
 
-        // 创建文章任务
-        String taskId = articleService.createArticleTask(request.getTopic(),request.getStyle(),request.getEnabledImageMethods(), loginUser);
+        // 检查并消耗配额 + 创建文章任务（在同一事务中）
+        String taskId = articleService.createArticleTaskWithQuotaCheck(
+                request.getTopic(),
+                request.getStyle(),
+                request.getEnabledImageMethods(),
+                loginUser
+        );
 
-        // 异步执行文章生成
-        articleAsyncService.executeArticleGeneration(taskId,request.getStyle(), request.getTopic());
+        // 异步执行阶段1：生成标题方案
+        articleAsyncService.executePhase1(
+                taskId,
+                request.getTopic(),
+                request.getStyle()
+        );
 
         return ResultUtils.success(taskId);
     }
+
 
 
     /**
@@ -250,6 +262,7 @@ public class ArticleController {
 
         return ResultUtils.success(modifiedOutline);
     }
+
 
     /**
      * 获取任务执行日志

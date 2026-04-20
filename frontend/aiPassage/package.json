@@ -12,10 +12,12 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@types/sortablejs": "^1.15.9",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.15.0",
     "marked": "^18.0.2",
     "pinia": "^3.0.4",
+    "sortablejs": "^1.15.7",
     "vue": "^3.5.31",
     "vue-router": "^4.6.4"
   },

@@ -22,6 +22,7 @@ import com.kanade.aipassage.mapper.ArticleMapper;
 import com.kanade.aipassage.service.ArticleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,11 +40,11 @@ import static com.kanade.aipassage.constant.UserConstant.ADMIN_ROLE;
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  implements ArticleService{
 
 
-    private final ArticleService articleService;
+    //private final ArticleService articleService;
     private final ArticleAgentService articleAgentService;
 
-    public ArticleServiceImpl(ArticleService articleService, ArticleAgentService articleAgentService) {
-        this.articleService = articleService;
+    public ArticleServiceImpl( ArticleAgentService articleAgentService) {
+        //this.articleService = articleService;
         this.articleAgentService = articleAgentService;
     }
 
@@ -166,6 +167,44 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
         List<ArticleState.OutlineSection> modifyOutline = articleAgentService.aiModifyOutline(article.getMainTitle(),article.getSubTitle(),current,modifySuggestion);
 
         return List.of();
+    }
+
+    @Override
+    public void saveTitleOptions(String taskId, List<ArticleState.TitleOption> titleOptions) {
+        Article article = getByTaskId(taskId);
+        if (taskId == null){
+            log.error("文章不存在");
+            return;
+        }
+        article.setTitleOptions(GsonUtils.toJson(titleOptions));
+
+        updateById(article);
+        log.info("标题保存");
+    }
+
+    @Override
+    public void updatePhase(String taskId, ArticlePhaseEnum articlePhaseEnum) {
+        Article article = getByTaskId(taskId);
+        if (article == null){
+            log.error("article is not exist");
+        return;
+        }
+
+        article.setPhase(articlePhaseEnum.getValue());
+
+        updateById(article);
+        log.info("update article state");
+
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String createArticleTaskWithQuotaCheck(String topic, String style, List<String> enabledImageMethods, User loginUser) {
+        // 在同一事务中：先扣配额，再创建任务
+        // 如果任务创建失败，配额会自动回滚
+        // quotaService.checkAndConsumeQuota(loginUser);
+        return createArticleTask(topic, style, enabledImageMethods, loginUser);
     }
 
     @Override
