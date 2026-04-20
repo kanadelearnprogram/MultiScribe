@@ -8,6 +8,7 @@ import com.kanade.aipassage.exception.ThrowUtils;
 import com.kanade.aipassage.model.dto.ArticleCreateRequest;
 import com.kanade.aipassage.model.dto.ArticleQueryRequest;
 import com.kanade.aipassage.model.entity.User;
+import com.kanade.aipassage.model.enums.ArticleStyleEnum;
 import com.kanade.aipassage.model.vo.ArticleVO;
 import com.kanade.aipassage.service.AgentLogService;
 import com.kanade.aipassage.service.ArticleAsyncService;
@@ -108,13 +109,14 @@ public class ArticleController {
         ThrowUtils.throwIf(request.getTopic() == null || request.getTopic().trim().isEmpty(),
                 ErrorCode.PARAMS_ERROR, "选题不能为空");
 
+        ThrowUtils.throwIf(ArticleStyleEnum.isValid(request.getStyle()),ErrorCode.PARAMS_ERROR,"无效风格");
         User loginUser = userService.getLoginUser(httpServletRequest);
 
         // 创建文章任务
-        String taskId = articleService.createArticleTask(request.getTopic(), loginUser);
+        String taskId = articleService.createArticleTask(request.getTopic(),request.getStyle(),request.getEnabledImageMethods(), loginUser);
 
         // 异步执行文章生成
-        articleAsyncService.executeArticleGeneration(taskId, request.getTopic());
+        articleAsyncService.executeArticleGeneration(taskId,request.getStyle(), request.getTopic());
 
         return ResultUtils.success(taskId);
     }

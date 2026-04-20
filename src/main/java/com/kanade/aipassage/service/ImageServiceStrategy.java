@@ -37,7 +37,7 @@ public class ImageServiceStrategy {
         }
     }
 
-    // 获取图I片 上传
+    // 获取图片 上传
     public ImageResult getImageAndUpload(String imageSource, ImageRequest request) {
         ImageMethodEnum method = resolveMethod(imageSource);
         ImageSearchService service = serviceMap.get(method);

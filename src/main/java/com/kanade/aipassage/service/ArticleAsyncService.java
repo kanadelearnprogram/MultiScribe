@@ -28,7 +28,7 @@ public class ArticleAsyncService {
     private ArticleService articleService;
 
     @Async("articleExecutor")
-    public void executeArticleGeneration(String taskId, String topic){
+    public void executeArticleGeneration(String taskId,String style, String topic){
         log.info("异步 taskId={} topic={}",taskId,topic);
 
         try {
@@ -43,7 +43,7 @@ public class ArticleAsyncService {
             ArticleState state = new ArticleState();
             state.setTaskId(taskId);
             state.setTopic(topic);
-
+            state.setStyle(style);
             // 推送进度
             articleAgentService.executeArticleGeneration(state, mesage ->{
                 handleAgentMessage(taskId, mesage, state);

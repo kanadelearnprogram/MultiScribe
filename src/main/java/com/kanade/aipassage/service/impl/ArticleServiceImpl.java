@@ -1,12 +1,14 @@
 package com.kanade.aipassage.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.kanade.aipassage.exception.BusinessException;
 import com.kanade.aipassage.exception.ErrorCode;
 import com.kanade.aipassage.exception.ThrowUtils;
 import com.kanade.aipassage.model.dto.ArticleQueryRequest;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.entity.User;
 import com.kanade.aipassage.model.enums.ArticleStatusEnum;
+import com.kanade.aipassage.model.enums.ImageMethodEnum;
 import com.kanade.aipassage.model.vo.ArticleVO;
 import com.kanade.aipassage.utils.GsonUtils;
 import com.mybatisflex.core.paginate.Page;
@@ -100,7 +102,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
     }
 
     @Override
-    public String createArticleTask(String topic, User loginUser) {
+    public String createArticleTask(String topic, String style,List<String> enabledImageMethods, User loginUser) {
+
+        List<String> finalImageMethods = processImageMethods(enabledImageMethods, loginUser);
+
+        // 校验配图方式权限（普通用户不能使用 NANO_BANANA 和 SVG_DIAGRAM）
+        validateImageMethods(finalImageMethods, loginUser);
+
         // 生成任务ID
         String taskId = IdUtil.simpleUUID();
 
@@ -109,9 +117,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
         article.setTaskId(taskId);
         article.setUserId(loginUser.getId());
         article.setTopic(topic);
+        article.setStyle(style);
         article.setStatus(ArticleStatusEnum.PENDING.getValue());
         article.setCreateTime(LocalDateTime.now());
-
+        article.setEnabledImageMethods(finalImageMethods != null && !finalImageMethods.isEmpty()
+                ? GsonUtils.toJson(finalImageMethods) : null);
         this.save(article);
 
         log.info("文章任务已创建, taskId={}, userId={}", taskId, loginUser.getId());
@@ -175,5 +185,43 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
 
     private void checkArticlePermission(Article article, User loginUser) {
 
+    }
+    private List<String> processImageMethods(List<String> enabledImageMethods, User loginUser) {
+        // 如果用户已选择，直接返回
+        if (enabledImageMethods != null && !enabledImageMethods.isEmpty()) {
+            return enabledImageMethods;
+        }
+
+        // VIP 和管理员：不限制，返回 null 表示支持所有方式
+//        if (isVipOrAdmin(loginUser)) {
+//            return null;
+//        }
+
+        // 普通用户：返回默认的非 VIP 方式
+        return List.of(
+                ImageMethodEnum.PEXELS.getValue(),
+                ImageMethodEnum.MERMAID.getValue(),
+                ImageMethodEnum.ICONIFY.getValue(),
+                ImageMethodEnum.EMOJI_PACK.getValue()
+        );
+    }
+    private void validateImageMethods(List<String> enabledImageMethods, User loginUser) {
+        if (enabledImageMethods == null || enabledImageMethods.isEmpty()) {
+            return;
+        }
+
+//        // VIP 和管理员无限制
+//        if (isVipOrAdmin(loginUser)) {
+//            return;
+//        }
+
+        // 普通用户限制
+        for (String method : enabledImageMethods) {
+            if (ImageMethodEnum.NANO_BANANA.getValue().equals(method) ||
+                    ImageMethodEnum.SVG_DIAGRAM.getValue().equals(method)) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR,
+                        "高级配图功能（AI 生图、SVG 图表）仅限 VIP 会员使用");
+            }
+        }
     }
 }

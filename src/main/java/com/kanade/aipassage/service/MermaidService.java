@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RuntimeUtil;
 import cn.hutool.system.SystemUtil;
 
+import com.kanade.aipassage.config.MermaidConfig;
 import com.kanade.aipassage.model.dto.ImageData;
 import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;

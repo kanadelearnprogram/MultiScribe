@@ -9,6 +9,8 @@ import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import com.kanade.aipassage.model.entity.Article;
 
+import java.util.List;
+
 /**
  * 文章表 服务层。
  *
@@ -17,7 +19,8 @@ import com.kanade.aipassage.model.entity.Article;
 public interface ArticleService extends IService<Article> {
 
     ArticleVO getArticleDetail(String taskId, User loginUser);
-    String createArticleTask(String topic, User loginUser);
+
+    String createArticleTask(String topic, String style,List<String> enabledImageMethods, User loginUser);
 
     boolean deleteArticle(Long id, User loginUser);
 
@@ -29,4 +32,4 @@ public interface ArticleService extends IService<Article> {
 
     void saveArticleContent(String taskId, ArticleState state);
 
-}
+    }

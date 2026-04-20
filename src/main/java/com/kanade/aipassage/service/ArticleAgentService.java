@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.kanade.aipassage.constant.PromptConstant;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.dto.ImageRequest;
+import com.kanade.aipassage.model.enums.ArticleStyleEnum;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
 import com.kanade.aipassage.model.enums.SseMessageTypeEnum;
 import com.kanade.aipassage.utils.GsonUtils;
@@ -77,8 +78,8 @@ public class ArticleAgentService {
     }
 
     private void agent1GenerateTitle(ArticleState state) {
-        String prompt = PromptConstant.AGENT1_TITLE_PROMPT.replace("{topic}",state.getTopic());
-
+        String prompt = PromptConstant.AGENT1_TITLE_PROMPT.replace("{topic}",state.getTopic())
+                + getStylePrompt(state.getStyle());
         // call llm
         String content = callLlm(prompt);
 
@@ -93,8 +94,8 @@ public class ArticleAgentService {
     private void agent2GenerateOutline(ArticleState state, Consumer<String> streamHandler) {
         String prompt = PromptConstant.AGENT2_OUTLINE_PROMPT
                 .replace("{mainTitle}", state.getTitle().getMainTitle())
-                .replace("{subTitle}", state.getTitle().getSubTitle());
-
+                .replace("{subTitle}", state.getTitle().getSubTitle())
+        + getStylePrompt(state.getStyle());
         String content = callLlmWithStream(prompt, streamHandler, SseMessageTypeEnum.AGENT2_STREAMING);
         ArticleState.OutlineResult outlineResult = parseJsonResponse(content, ArticleState.OutlineResult.class, "大纲");
         state.setOutline(outlineResult);
@@ -106,7 +107,7 @@ public class ArticleAgentService {
         String prompt = PromptConstant.AGENT3_CONTENT_PROMPT
                 .replace("{mainTitle}", state.getTitle().getMainTitle())
                 .replace("{subTitle}", state.getTitle().getSubTitle())
-                .replace("{outline}", outlineText);
+                .replace("{outline}", outlineText) + getStylePrompt(state.getStyle());
 
         String content = callLlmWithStream(prompt, streamHandler, SseMessageTypeEnum.AGENT3_STREAMING);
         state.setContent(content);
@@ -156,7 +157,7 @@ public class ArticleAgentService {
             String cosUrl = result.getUrl();
             ImageMethodEnum method = result.getMethod();
 
-            // 创建配图结果（URL 已经是 COS 地址）
+            // 创建配图结果
             ArticleState.ImageResult imageResult = buildImageResult(requirement, cosUrl, method);
             imageResults.add(imageResult);
 
@@ -272,5 +273,22 @@ public class ArticleAgentService {
                 break;
             }
         }
+    }
+    private String getStylePrompt(String style) {
+        if (style == null || style.isEmpty()) {
+            return "";
+        }
+
+        ArticleStyleEnum styleEnum = ArticleStyleEnum.getEnumByValue(style);
+        if (styleEnum == null) {
+            return "";
+        }
+
+        return switch (styleEnum) {
+            case TECH -> PromptConstant.STYLE_TECH_PROMPT;
+            case EMOTIONAL -> PromptConstant.STYLE_EMOTIONAL_PROMPT;
+            case EDUCATIONAL -> PromptConstant.STYLE_EDUCATIONAL_PROMPT;
+            case HUMOROUS -> PromptConstant.STYLE_HUMOROUS_PROMPT;
+        };
     }
 }
