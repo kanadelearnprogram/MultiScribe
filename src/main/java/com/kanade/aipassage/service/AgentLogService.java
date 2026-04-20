@@ -1,5 +1,6 @@
 package com.kanade.aipassage.service;
 
+import com.kanade.aipassage.model.vo.AgentExecutionStats;
 import com.mybatisflex.core.service.IService;
 import com.kanade.aipassage.model.entity.AgentLog;
 
@@ -10,4 +11,7 @@ import com.kanade.aipassage.model.entity.AgentLog;
  */
 public interface AgentLogService extends IService<AgentLog> {
 
+    void saveLogAsync(AgentLog agentLog);
+
+    AgentExecutionStats getExecutionStats(String taskId);
 }

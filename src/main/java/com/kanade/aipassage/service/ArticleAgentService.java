@@ -3,6 +3,7 @@ package com.kanade.aipassage.service;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.kanade.aipassage.annotation.AgentExecution;
 import com.kanade.aipassage.constant.PromptConstant;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.dto.ImageRequest;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -94,6 +96,7 @@ public class ArticleAgentService {
     /**
      * 智能体2：生成大纲（流式输出）
      */
+    @AgentExecution(value = "agent2_generate_outline", description = "生成文章大纲")
     private void agent2GenerateOutline(ArticleState state, Consumer<String> streamHandler) {
         // 构建 prompt，根据是否有用户补充描述插入对应部分
         String descriptionSection = "";
@@ -114,7 +117,7 @@ public class ArticleAgentService {
         log.info("智能体2：大纲生成成功, sections={}", outlineResult.getSections().size());
     }
 
-
+    @AgentExecution(value = "agent3_generate_content", description = "生成文章正文")
     private void agent3GenerateContent(ArticleState state, Consumer<String> streamHandler) {
         String outlineText = GsonUtils.toJson(state.getOutline().getSections());
         String prompt = PromptConstant.AGENT3_CONTENT_PROMPT
@@ -130,6 +133,7 @@ public class ArticleAgentService {
     /**
      * 智能体4：分析配图需求
      */
+    @AgentExecution(value = "agent4_analyze_image_requirements", description = "分析配图需求")
     private void agent4AnalyzeImageRequirements(ArticleState state) {
         String prompt = PromptConstant.AGENT4_IMAGE_REQUIREMENTS_PROMPT
                 .replace("{mainTitle}", state.getTitle().getMainTitle())
@@ -171,6 +175,7 @@ public class ArticleAgentService {
     /**
      * 智能体5：生成配图（串行执行）
      */
+    @AgentExecution(value = "agent5_generate_images", description = "生成配图")
     private void agent5GenerateImages(ArticleState state, Consumer<String> streamHandler) {
         List<ArticleState.ImageResult> imageResults = new ArrayList<>();
 
@@ -213,6 +218,7 @@ public class ArticleAgentService {
     /**
      * 图文合成：将配图插入正文对应位置
      */
+    @AgentExecution(value = "agent6_merge_content", description = "图文合成")
     private void mergeImagesIntoContent(ArticleState state) {
         String content = state.getContent();
         List<ArticleState.ImageResult> images = state.getImages();
@@ -273,6 +279,7 @@ public class ArticleAgentService {
             // 智能体1：生成标题方案
             log.info("阶段1：开始生成标题方案, taskId={}", state.getTaskId());
             agent1GenerateTitleOptions(state);
+            getProxy().agent1GenerateTitleOptions(state);
             streamHandler.accept(SseMessageTypeEnum.AGENT1_COMPLETE.getValue());
             log.info("阶段1：标题方案生成完成, taskId={}, optionsCount={}",
                     state.getTaskId(), state.getTitleOptions().size());
@@ -284,6 +291,7 @@ public class ArticleAgentService {
     /**
      * 智能体1：生成标题方案（3-5个）
      */
+    @AgentExecution(value = "agent1_generate_titles", description = "生成标题方案")
     private void agent1GenerateTitleOptions(ArticleState state) {
         String prompt = PromptConstant.AGENT1_TITLE_PROMPT
                 .replace("{topic}", state.getTopic())
@@ -306,11 +314,12 @@ public class ArticleAgentService {
      * @param state         文章状态
      * @param streamHandler 流式输出处理器
      */
+
     public void executePhase2_GenerateOutline(ArticleState state, Consumer<String> streamHandler) {
         try {
             // 智能体2：生成大纲（流式输出）
             log.info("阶段2：开始生成大纲, taskId={}", state.getTaskId());
-            agent2GenerateOutline(state, streamHandler);
+            getProxy().agent2GenerateOutline(state, streamHandler);
             streamHandler.accept(SseMessageTypeEnum.AGENT2_COMPLETE.getValue());
             log.info("阶段2：大纲生成完成, taskId={}", state.getTaskId());
         } catch (Exception e) {
@@ -325,26 +334,28 @@ public class ArticleAgentService {
      * @param state         文章状态
      * @param streamHandler 流式输出处理器
      */
+
     public void executePhase3_GenerateContent(ArticleState state, Consumer<String> streamHandler) {
         try {
+            ArticleAgentService proxy = getProxy();
             // 智能体3：生成正文（流式输出）
             log.info("阶段3：开始生成正文, taskId={}", state.getTaskId());
-            agent3GenerateContent(state, streamHandler);
+            proxy.agent3GenerateContent(state, streamHandler);
             streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
 
             // 智能体4：分析配图需求
             log.info("阶段3：开始分析配图需求, taskId={}", state.getTaskId());
-            agent4AnalyzeImageRequirements(state);
+            proxy.agent4AnalyzeImageRequirements(state);
             streamHandler.accept(SseMessageTypeEnum.AGENT4_COMPLETE.getValue());
 
             // 智能体5：生成配图
             log.info("阶段3：开始生成配图, taskId={}", state.getTaskId());
-            agent5GenerateImages(state, streamHandler);
+            proxy.agent5GenerateImages(state, streamHandler);
             streamHandler.accept(SseMessageTypeEnum.AGENT5_COMPLETE.getValue());
 
             // 图文合成：将配图插入正文
             log.info("阶段3：开始图文合成, taskId={}", state.getTaskId());
-            mergeImagesIntoContent(state);
+            proxy.mergeImagesIntoContent(state);
             streamHandler.accept(SseMessageTypeEnum.MERGE_COMPLETE.getValue());
 
             log.info("阶段3：正文生成完成, taskId={}", state.getTaskId());
@@ -463,5 +474,15 @@ public class ArticleAgentService {
         return outlineResult.getSections();
 
 
+    }
+
+    private ArticleAgentService getProxy() {
+        try {
+            return (ArticleAgentService) AopContext.currentProxy();
+        } catch (IllegalStateException e) {
+            // 如果获取代理失败，返回 this（降级处理）
+            log.warn("获取 AOP 代理对象失败，使用原始对象: {}", e.getMessage());
+            return this;
+        }
     }
 }

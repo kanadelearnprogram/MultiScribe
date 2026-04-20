@@ -8,6 +8,7 @@ import com.kanade.aipassage.exception.ThrowUtils;
 import com.kanade.aipassage.model.dto.*;
 import com.kanade.aipassage.model.entity.User;
 import com.kanade.aipassage.model.enums.ArticleStyleEnum;
+import com.kanade.aipassage.model.vo.AgentExecutionStats;
 import com.kanade.aipassage.model.vo.ArticleVO;
 import com.kanade.aipassage.service.AgentLogService;
 import com.kanade.aipassage.service.ArticleAsyncService;
@@ -267,13 +268,13 @@ public class ArticleController {
     /**
      * 获取任务执行日志
      */
-//    @GetMapping("/execution-logs/{taskId}")
-//    @Operation(summary = "获取任务执行日志")
-//    public BaseResponse<AgentExecutionStats> getExecutionLogs(@PathVariable String taskId) {
-//        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
-//
-//        AgentExecutionStats stats = agentLogService.getExecutionStats(taskId);
-//        return ResultUtils.success(stats);
-//    }
+    @GetMapping("/execution-logs/{taskId}")
+    @Operation(summary = "获取任务执行日志")
+    public BaseResponse<AgentExecutionStats> getExecutionLogs(@PathVariable String taskId) {
+        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+
+        AgentExecutionStats stats = agentLogService.getExecutionStats(taskId);
+        return ResultUtils.success(stats);
+    }
 }

@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("agent_log")
+@Table(value = "agent_log",camelToUnderline = false)
 public class AgentLog implements Serializable {
 
     @Serial
@@ -108,7 +108,7 @@ public class AgentLog implements Serializable {
     /**
      * 是否删除
      */
-    @Column("isDelete")
+    @Column(value = "isDelete",isLogicDelete = true)
     private Integer isDelete;
 
 }
