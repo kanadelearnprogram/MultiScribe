@@ -20,4 +20,8 @@ public interface ArticleConstant {
 
     long SSE_TIMEOUT_MS = 30 *60 * 1000L;
     long SSE_RECONNECT_TIME_MS = 3000L;
+
+    String BING_IMAGE_SEARCH_URL = "https://cn.bing.com/images/async";
+
+    String EMOJI_PACK_SUFFIX = "熊猫头表情包";
 }

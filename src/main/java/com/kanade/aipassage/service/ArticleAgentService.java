@@ -5,6 +5,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.kanade.aipassage.constant.PromptConstant;
 import com.kanade.aipassage.model.dto.ArticleState;
+import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
 import com.kanade.aipassage.model.enums.SseMessageTypeEnum;
 import com.kanade.aipassage.utils.GsonUtils;
@@ -29,8 +30,8 @@ public class ArticleAgentService {
     @Resource
     private ImageSearchService imageSearchService;
 
-//    @Resource
-//    private ImageServiceStrategy imageServiceStrategy;
+    @Resource
+    private ImageServiceStrategy imageServiceStrategy;
 
     @Resource
     private CosService cosService;
@@ -137,38 +138,40 @@ public class ArticleAgentService {
         List<ArticleState.ImageResult> imageResults = new ArrayList<>();
 
         for (ArticleState.ImageRequirement requirement : state.getImageRequirements()) {
-            log.info("智能体5：开始检索配图, position={}, keywords={}",
-                    requirement.getPosition(), requirement.getKeywords());
+            String imageSource = requirement.getImageSource();
+            log.info("智能体5：开始获取配图, position={}, imageSource={}, keywords={}",
+                    requirement.getPosition(), imageSource, requirement.getKeywords());
 
-            // 调用图片检索服务
-            String imageUrl = imageSearchService.searchImage(requirement.getKeywords());
+            // 构建图片请求对象
+            ImageRequest imageRequest = ImageRequest.builder()
+                    .keywords(requirement.getKeywords())
+                    .prompt(requirement.getPrompt())
+                    .position(requirement.getPosition())
+                    .type(requirement.getType())
+                    .build();
 
-            // 降级策略
-            ImageMethodEnum method = imageSearchService.getMethod();
-            if (imageUrl == null) {
-                imageUrl = imageSearchService.getFallbackImage(requirement.getPosition());
-                method = ImageMethodEnum.PICSUM;
-                log.warn("智能体5：图片检索失败, 使用降级方案, position={}", requirement.getPosition());
-            }
+            // 使用策略模式获取图片并统一上传到 COS
+            ImageServiceStrategy.ImageResult result = imageServiceStrategy.getImageAndUpload(imageSource, imageRequest);
 
-            // 使用图片直接 URL（MVP 阶段不上传到 COS，简化流程）
-            String finalImageUrl = cosService.useDirectUrl(imageUrl);
+            String cosUrl = result.getUrl();
+            ImageMethodEnum method = result.getMethod();
 
-            // 创建配图结果
-            ArticleState.ImageResult imageResult = buildImageResult(requirement, finalImageUrl, method);
+            // 创建配图结果（URL 已经是 COS 地址）
+            ArticleState.ImageResult imageResult = buildImageResult(requirement, cosUrl, method);
             imageResults.add(imageResult);
 
             // 推送单张配图完成
             String imageCompleteMessage = SseMessageTypeEnum.IMAGE_COMPLETE.getStreamingPrefix() + GsonUtils.toJson(imageResult);
             streamHandler.accept(imageCompleteMessage);
 
-            log.info("智能体5：配图检索成功, position={}, method={}",
-                    requirement.getPosition(), method.getValue());
+            log.info("智能体5：配图获取并上传成功, position={}, method={}, cosUrl={}",
+                    requirement.getPosition(), method.getValue(), cosUrl);
         }
 
         state.setImages(imageResults);
-        log.info("智能体5：所有配图生成完成, count={}", imageResults.size());
+        log.info("智能体5：所有配图生成并上传完成, count={}", imageResults.size());
     }
+
 
     /**
      * 图文合成：将配图插入正文对应位置
@@ -182,19 +185,16 @@ public class ArticleAgentService {
             return;
         }
 
-        StringBuilder fullContent = new StringBuilder();
+        String fullContent = content;
 
-        // 按行处理正文，在章节标题后插入对应图片
-        String[] lines = content.split("\n");
-        for (String line : lines) {
-            fullContent.append(line).append("\n");
-
-            // 检查是否是章节标题（以 ## 开头）
-            if (line.startsWith("## ")) {
-                String sectionTitle = line.substring(3).trim();
-                insertImageAfterSection(fullContent, images, sectionTitle);
+        for (ArticleState.ImageResult image : images) {
+            String placeholder = image.getPlaceholderId();
+            if (placeholder != null &&  !placeholder.isEmpty()){
+                String md = "![" + image.getDescription() +"]("+image.getUrl() +")";
+                fullContent = fullContent.replace(placeholder,md);
             }
         }
+
 
         state.setFullContent(fullContent.toString());
         log.info("图文合成完成, fullContentLength={}", fullContent.length());
