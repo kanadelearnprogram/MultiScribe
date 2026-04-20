@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -72,6 +73,7 @@ public class ArticleAsyncService {
             sseEmitterManager.complete(taskId);
         }
     }
+
 
     private void handleAgentMessage(String taskId,String message, ArticleState state){
         Map<String,Object> data = buildMessageData(message,state);
@@ -153,5 +155,12 @@ public class ArticleAsyncService {
         data.put("type", type.getValue());
         data.putAll(additionalData);
         sseEmitterManager.send(taskId, GsonUtils.toJson(data));
+    }
+
+    public void executePhase2(String taskId) {
+    }
+
+    public void executePhase3(String taskId) {
+
     }
 }

@@ -1,15 +1,18 @@
 package com.kanade.aipassage.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import com.google.gson.reflect.TypeToken;
 import com.kanade.aipassage.exception.BusinessException;
 import com.kanade.aipassage.exception.ErrorCode;
 import com.kanade.aipassage.exception.ThrowUtils;
 import com.kanade.aipassage.model.dto.ArticleQueryRequest;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.entity.User;
+import com.kanade.aipassage.model.enums.ArticlePhaseEnum;
 import com.kanade.aipassage.model.enums.ArticleStatusEnum;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
 import com.kanade.aipassage.model.vo.ArticleVO;
+import com.kanade.aipassage.service.ArticleAgentService;
 import com.kanade.aipassage.utils.GsonUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
@@ -35,6 +38,14 @@ import static com.kanade.aipassage.constant.UserConstant.ADMIN_ROLE;
 @Slf4j
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  implements ArticleService{
 
+
+    private final ArticleService articleService;
+    private final ArticleAgentService articleAgentService;
+
+    public ArticleServiceImpl(ArticleService articleService, ArticleAgentService articleAgentService) {
+        this.articleService = articleService;
+        this.articleAgentService = articleAgentService;
+    }
 
     @Override
     public ArticleVO getArticleDetail(String taskId, User loginUser) {
@@ -99,6 +110,62 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
 
         this.updateById(article);
         log.info("文章保存成功, taskId={}", taskId);
+    }
+
+    @Override
+    public void confirmTitle(String task, String mainTitle, String subTitle, String userDescription, User loginUser) {
+        Article article = getByTaskId(task);
+        ThrowUtils.throwIf(article == null,ErrorCode.PARAMS_ERROR);
+
+        checkArticlePermission(article,loginUser);
+
+        ArticlePhaseEnum anEnum = ArticlePhaseEnum.getByValue(article.getPhase());
+        ThrowUtils.throwIf(anEnum != ArticlePhaseEnum.TITLE_SELECTING,ErrorCode.OPERATION_ERROR);
+        article.setMainTitle(mainTitle);
+        article.setSubTitle(subTitle);
+        article.setUserDescription(userDescription);
+        article.setPhase(ArticlePhaseEnum.OUTLINE_GENERATING.getValue());
+
+        this.updateById(article);
+        log.info("确认标题");
+
+    }
+
+    @Override
+    public void confirmOutline(String taskId, List<ArticleState.OutlineSection> outline, User loginUser) {
+        Article article = getByTaskId(taskId);
+        ThrowUtils.throwIf(article == null, ErrorCode.NOT_FOUND_ERROR, "文章不存在");
+
+        // 校验权限
+        checkArticlePermission(article, loginUser);
+
+        // 校验当前阶段（必须是 OUTLINE_EDITING）
+        ArticlePhaseEnum currentPhase = ArticlePhaseEnum.getByValue(article.getPhase());
+        ThrowUtils.throwIf(currentPhase != ArticlePhaseEnum.OUTLINE_EDITING,
+                ErrorCode.OPERATION_ERROR, "当前阶段不允许此操作");
+
+        // 保存用户编辑后的大纲
+        article.setOutline(GsonUtils.toJson(outline));
+        article.setPhase(ArticlePhaseEnum.CONTENT_GENERATING.getValue());
+
+        this.updateById(article);
+    }
+
+    @Override
+    public List<ArticleState.OutlineSection> aiModifyOutline(String taskId, String modifySuggestion, User loginUser) {
+        Article article = getByTaskId(taskId);
+        ThrowUtils.throwIf(article == null,ErrorCode.NOT_FOUND_ERROR);
+        checkArticlePermission(article,loginUser);
+
+        ArticlePhaseEnum articlePhaseEnum = ArticlePhaseEnum.getByValue(article.getPhase());
+
+        ThrowUtils.throwIf(articlePhaseEnum.getValue() != ArticlePhaseEnum.OUTLINE_EDITING.getValue(),ErrorCode.OPERATION_ERROR);
+
+        List<ArticleState.OutlineSection> current = GsonUtils.fromJson(article.getOutline(),new TypeToken<List<ArticleState.OutlineSection>>(){});
+
+        List<ArticleState.OutlineSection> modifyOutline = articleAgentService.aiModifyOutline(article.getMainTitle(),article.getSubTitle(),current,modifySuggestion);
+
+        return List.of();
     }
 
     @Override

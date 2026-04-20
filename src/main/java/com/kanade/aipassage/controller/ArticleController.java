@@ -5,8 +5,7 @@ import com.kanade.aipassage.common.DeleteRequest;
 import com.kanade.aipassage.common.ResultUtils;
 import com.kanade.aipassage.exception.ErrorCode;
 import com.kanade.aipassage.exception.ThrowUtils;
-import com.kanade.aipassage.model.dto.ArticleCreateRequest;
-import com.kanade.aipassage.model.dto.ArticleQueryRequest;
+import com.kanade.aipassage.model.dto.*;
 import com.kanade.aipassage.model.entity.User;
 import com.kanade.aipassage.model.enums.ArticleStyleEnum;
 import com.kanade.aipassage.model.vo.ArticleVO;
@@ -169,88 +168,88 @@ public class ArticleController {
     /**
      * 确认标题并输入补充描述
      */
-//    @PostMapping("/confirm-title")
-//    @Operation(summary = "确认标题并输入补充描述")
-//    public BaseResponse<Void> confirmTitle(@RequestBody ArticleConfirmTitleRequest request,
-//                                            HttpServletRequest httpServletRequest) {
-//        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
-//        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
-//        ThrowUtils.throwIf(request.getSelectedMainTitle() == null || request.getSelectedMainTitle().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "主标题不能为空");
-//        ThrowUtils.throwIf(request.getSelectedSubTitle() == null || request.getSelectedSubTitle().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "副标题不能为空");
-//
-//        User loginUser = userService.getLoginUser(httpServletRequest);
-//
-//        // 确认标题
-//        articleService.confirmTitle(
-//                request.getTaskId(),
-//                request.getSelectedMainTitle(),
-//                request.getSelectedSubTitle(),
-//                request.getUserDescription(),
-//                loginUser
-//        );
-//
-//        // 异步执行阶段2：生成大纲
-//        articleAsyncService.executePhase2(request.getTaskId());
-//
-//        return ResultUtils.success(null);
-//    }
+    @PostMapping("/confirm-title")
+    @Operation(summary = "确认标题并输入补充描述")
+    public BaseResponse<Void> confirmTitle(@RequestBody ArticleConfirmTitleRequest request,
+                                            HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+        ThrowUtils.throwIf(request.getSelectedMainTitle() == null || request.getSelectedMainTitle().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "主标题不能为空");
+        ThrowUtils.throwIf(request.getSelectedSubTitle() == null || request.getSelectedSubTitle().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "副标题不能为空");
+
+        User loginUser = userService.getLoginUser(httpServletRequest);
+
+        // 确认标题
+        articleService.confirmTitle(
+                request.getTaskId(),
+                request.getSelectedMainTitle(),
+                request.getSelectedSubTitle(),
+                request.getUserDescription(),
+                loginUser
+        );
+
+        // 异步执行阶段2：生成大纲
+        articleAsyncService.executePhase2(request.getTaskId());
+
+        return ResultUtils.success(null);
+    }
 
     /**
      * 确认大纲
      */
-//    @PostMapping("/confirm-outline")
-//    @Operation(summary = "确认大纲")
-//    public BaseResponse<Void> confirmOutline(@RequestBody ArticleConfirmOutlineRequest request,
-//                                              HttpServletRequest httpServletRequest) {
-//        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
-//        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
-//        ThrowUtils.throwIf(request.getOutline() == null || request.getOutline().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "大纲不能为空");
-//
-//        User loginUser = userService.getLoginUser(httpServletRequest);
-//
-//        // 确认大纲
-//        articleService.confirmOutline(
-//                request.getTaskId(),
-//                request.getOutline(),
-//                loginUser
-//        );
-//
-//        // 异步执行阶段3：生成正文+配图
-//        articleAsyncService.executePhase3(request.getTaskId());
-//
-//        return ResultUtils.success(null);
-//    }
+    @PostMapping("/confirm-outline")
+    @Operation(summary = "确认大纲")
+    public BaseResponse<Void> confirmOutline(@RequestBody ArticleConfirmOutlineRequest request,
+                                              HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+        ThrowUtils.throwIf(request.getOutline() == null || request.getOutline().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "大纲不能为空");
+
+        User loginUser = userService.getLoginUser(httpServletRequest);
+
+        // 确认大纲
+        articleService.confirmOutline(
+                request.getTaskId(),
+                request.getOutline(),
+                loginUser
+        );
+
+        // 异步执行阶段3：生成正文+配图
+        articleAsyncService.executePhase3(request.getTaskId());
+
+        return ResultUtils.success(null);
+    }
 
     /**
      * AI 修改大纲
      */
-//    @PostMapping("/ai-modify-outline")
-//    @Operation(summary = "AI 修改大纲")
-//    public BaseResponse<List<ArticleState.OutlineSection>> aiModifyOutline(
-//            @RequestBody ArticleAiModifyOutlineRequest request,
-//            HttpServletRequest httpServletRequest) {
-//        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
-//        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
-//        ThrowUtils.throwIf(request.getModifySuggestion() == null || request.getModifySuggestion().trim().isEmpty(),
-//                ErrorCode.PARAMS_ERROR, "修改建议不能为空");
-//
-//        User loginUser = userService.getLoginUser(httpServletRequest);
-//
-//        // AI 修改大纲
-//        List<ArticleState.OutlineSection> modifiedOutline = articleService.aiModifyOutline(
-//                request.getTaskId(),
-//                request.getModifySuggestion(),
-//                loginUser
-//        );
-//
-//        return ResultUtils.success(modifiedOutline);
-//    }
+    @PostMapping("/ai-modify-outline")
+    @Operation(summary = "AI 修改大纲")
+    public BaseResponse<List<ArticleState.OutlineSection>> aiModifyOutline(
+            @RequestBody ArticleAiModifyOutlineRequest request,
+            HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(request.getTaskId() == null || request.getTaskId().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+        ThrowUtils.throwIf(request.getModifySuggestion() == null || request.getModifySuggestion().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "修改建议不能为空");
+
+        User loginUser = userService.getLoginUser(httpServletRequest);
+
+        // AI 修改大纲
+        List<ArticleState.OutlineSection> modifiedOutline = articleService.aiModifyOutline(
+                request.getTaskId(),
+                request.getModifySuggestion(),
+                loginUser
+        );
+
+        return ResultUtils.success(modifiedOutline);
+    }
 
     /**
      * 获取任务执行日志

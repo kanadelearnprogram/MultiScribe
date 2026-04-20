@@ -32,4 +32,9 @@ public interface ArticleService extends IService<Article> {
 
     void saveArticleContent(String taskId, ArticleState state);
 
-    }
+    void confirmTitle(String task,String mainTitle,String subTitle, String userDescription, User loginUser);
+
+    void confirmOutline(String taskId, List<ArticleState.OutlineSection> outline, User loginUser);
+
+    List<ArticleState.OutlineSection> aiModifyOutline(String taskId, String modifySuggestion, User loginUser);
+}
