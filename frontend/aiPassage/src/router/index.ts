@@ -41,6 +41,12 @@ const router = createRouter({
             name: '文章详情',
             component: () => import('@/pages/article/ArticleDetailPage.vue'),
         },
+        {
+            path: '/admin/statistics',
+            name: '数据分析',
+            component: () => import('@/pages/admin/StatisticsPage.vue'),
+        },
+
     ],
 })
 

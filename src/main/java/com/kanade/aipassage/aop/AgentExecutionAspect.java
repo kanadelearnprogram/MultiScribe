@@ -8,7 +8,10 @@ import com.kanade.aipassage.utils.GsonUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -17,11 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@Aspect
+@Component
 public class AgentExecutionAspect  {
 
     @Resource
     private AgentLogService agentLogService;
 
+    @Around("@annotation(agentExecution)")
     public Object aroundAgentExecution(ProceedingJoinPoint pij, AgentExecution agentExecution) throws Throwable {
         long start = System.currentTimeMillis();
         LocalDateTime startTime = LocalDateTime.now();

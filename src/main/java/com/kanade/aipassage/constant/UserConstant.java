@@ -15,5 +15,11 @@ public interface UserConstant {
      * 管理员角色
      */
     String ADMIN_ROLE = "admin";
+
+
+    int DEFAULT_QUOTA = 5;
+    String VIP_ROLE = "vip";
+
+
 }
 
