@@ -2,8 +2,8 @@ package com.kanade.aipassage.agent.tool;
 
 import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
-import com.kanade.aipassage.service.CosService;
-import com.kanade.aipassage.service.ImageServiceStrategy;
+import com.kanade.aipassage.cos.CosService;
+import com.kanade.aipassage.image.ImageServiceStrategy;
 import com.kanade.aipassage.utils.GsonUtils;
 import jakarta.annotation.Resource;
 import lombok.Data;

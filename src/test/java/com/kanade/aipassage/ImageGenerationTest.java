@@ -1,5 +1,8 @@
 package com.kanade.aipassage;
 
+import com.kanade.aipassage.cos.CosService;
+import com.kanade.aipassage.image.ImageSearchService;
+import com.kanade.aipassage.image.ImageServiceStrategy;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;

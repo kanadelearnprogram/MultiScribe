@@ -1,4 +1,4 @@
-package com.kanade.aipassage.service;
+package com.kanade.aipassage.image;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

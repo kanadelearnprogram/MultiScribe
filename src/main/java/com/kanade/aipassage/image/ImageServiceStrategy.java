@@ -1,9 +1,9 @@
-package com.kanade.aipassage.service;
+package com.kanade.aipassage.image;
 
-import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.dto.ImageData;
 import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ImageMethodEnum;
+import com.kanade.aipassage.cos.CosService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

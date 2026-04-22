@@ -5,6 +5,8 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.kanade.aipassage.annotation.AgentExecution;
 import com.kanade.aipassage.constant.PromptConstant;
+import com.kanade.aipassage.cos.CosService;
+import com.kanade.aipassage.image.ImageServiceStrategy;
 import com.kanade.aipassage.model.dto.ArticleState;
 import com.kanade.aipassage.model.dto.ImageRequest;
 import com.kanade.aipassage.model.enums.ArticleStyleEnum;

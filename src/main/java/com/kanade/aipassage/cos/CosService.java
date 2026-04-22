@@ -1,4 +1,4 @@
-package com.kanade.aipassage.service;
+package com.kanade.aipassage.cos;
 
 import com.kanade.aipassage.config.CosConfig;
 import com.kanade.aipassage.model.dto.ImageData;
