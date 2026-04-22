@@ -3,6 +3,7 @@ package com.kanade.aipassage.agent.agents;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.NodeAction;
+import com.alibaba.dashscope.aigc.multimodalconversation.MultiModalConversation;
 import com.google.gson.reflect.TypeToken;
 import com.kanade.aipassage.constant.PromptConstant;
 import com.kanade.aipassage.model.dto.ArticleState;

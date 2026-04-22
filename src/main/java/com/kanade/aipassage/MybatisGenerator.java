@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class MybatisGenerator {
     // 需要生成的表名
-    private static final String[] TABLE_NAMES = {"agent_log","article","payment_record","user"};
+    private static final String[] TABLE_NAMES = {"image_cache"};
 
     public static void main(String[] args) {
         // 获取数据源信息

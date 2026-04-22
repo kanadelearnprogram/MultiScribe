@@ -342,6 +342,80 @@ public class ImageGenerationTest {
     }
 
     /**
+     * 测试8：测试 Iconify 图标检索
+     */
+    @Test
+    public void testIconifyIconSearch() {
+        log.info("========== 测试 Iconify 图标检索 ==========");
+        
+        ImageRequest request = ImageRequest.builder()
+                .keywords("check")
+                .position(1)
+                .type("icon")
+                .build();
+        
+        ImageServiceStrategy.ImageResult result = imageServiceStrategy.getImageAndUpload(
+                ImageMethodEnum.ICONIFY.getValue(), 
+                request
+        );
+        
+        log.info("Iconify 图标检索结果:");
+        log.info("  - URL: {}", result.getUrl());
+        log.info("  - Method: {}", result.getMethod());
+        log.info("  - Success: {}", result.isSuccess());
+        
+        if (result.isSuccess()) {
+            log.info("✅ Iconify 图标检索成功");
+        } else {
+            log.warn("⚠️ Iconify 图标检索失败");
+        }
+    }
+
+    /**
+     * 测试9：测试多种图片类型混合生成
+     */
+    @Test
+    public void testMixedImageTypesGeneration() {
+        log.info("========== 测试多种图片类型混合生成 ==========");
+        
+        // 测试 Pexels
+        ImageRequest pexelsRequest = ImageRequest.builder()
+                .keywords("technology")
+                .position(1)
+                .type("section")
+                .build();
+        ImageServiceStrategy.ImageResult pexelsResult = imageServiceStrategy.getImageAndUpload(
+                ImageMethodEnum.PEXELS.getValue(), pexelsRequest
+        );
+        log.info("Pexels 结果: {} - {}", pexelsResult.getMethod(), pexelsResult.isSuccess() ? "成功" : "失败");
+        
+        // 测试 Emoji
+        ImageRequest emojiRequest = ImageRequest.builder()
+                .keywords("开心")
+                .position(2)
+                .type("emoji")
+                .build();
+        ImageServiceStrategy.ImageResult emojiResult = imageServiceStrategy.getImageAndUpload(
+                ImageMethodEnum.EMOJI_PACK.getValue(), emojiRequest
+        );
+        log.info("Emoji 结果: {} - {}", emojiResult.getMethod(), emojiResult.isSuccess() ? "成功" : "失败");
+        
+        // 测试 Mermaid
+        String mermaidCode = "graph TD\n    A[开始] --> B[结束]";
+        ImageRequest mermaidRequest = ImageRequest.builder()
+                .prompt(mermaidCode)
+                .position(3)
+                .type("diagram")
+                .build();
+        ImageServiceStrategy.ImageResult mermaidResult = imageServiceStrategy.getImageAndUpload(
+                ImageMethodEnum.MERMAID.getValue(), mermaidRequest
+        );
+        log.info("Mermaid 结果: {} - {}", mermaidResult.getMethod(), mermaidResult.isSuccess() ? "成功" : "失败");
+        
+        log.info("✅ 多种图片类型混合生成测试完成");
+    }
+
+    /**
      * 辅助方法：图文合成（从 ArticleAgentService 复制）
      */
     private void mergeImagesIntoContent(ArticleState state) {

@@ -106,9 +106,11 @@ public class ParallelImageGenerator implements NodeAction {
                     List<ArticleState.ImageRequirement> requirements = entry.getValue();
 
                     log.info("开始处理 {} 类型的图片，数量: {}", imageSource, requirements.size());
-
+                    log.info("图片需求{}",requirements);
                     // 同一类型内部串行执行
                     for (ArticleState.ImageRequirement req : requirements) {
+                        // image cache
+
                         try {
                             ImageGenerationTool.ImageGenerationResult result =
                                     imageGenerationTool.generateImageDirect(
