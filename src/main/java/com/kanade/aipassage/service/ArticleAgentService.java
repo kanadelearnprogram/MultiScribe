@@ -378,7 +378,7 @@ public class ArticleAgentService {
             String chunk = chatResponse.getResult().getOutput().getText();
             if (!chunk.isEmpty()){
                 stringBuilder.append(chunk);
-                streamHandler.accept(sseMessageTypeEnum + chunk);
+                streamHandler.accept(sseMessageTypeEnum.getStreamingPrefix() + chunk);
             }
         })
                 .doOnError(error -> log.error("llm stream wrong messageType={}",sseMessageTypeEnum,error))

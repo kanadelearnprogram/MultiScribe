@@ -81,8 +81,8 @@ public interface PromptConstant {
         根据以下大纲,创作文章正文:
         主标题：{mainTitle}
         副标题：{subTitle}
-        大纲：
-        {outline}
+        大纲：{outline}
+        你要完成的部分:{finish}
         
         要求:
         1. 内容要充实,每个章节300-400字

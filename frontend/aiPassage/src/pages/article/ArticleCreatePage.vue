@@ -200,10 +200,14 @@
               </div>
             </div>
 
-            <!-- 正文预览（流式输出） -->
-            <div v-if="article.content" class="content-preview">
-              <div v-html="markdownToHtml(article.content)" class="markdown-body"></div>
-              <span v-if="isStreaming" class="typing-cursor">|</span>
+            <!-- 正文预览（多章节独立显示） -->
+            <div v-if="chapterContents.some(c => c)" class="content-preview">
+              <div v-for="(chapterContent, index) in chapterContents" :key="index" class="chapter-section">
+                <div v-if="chapterContent" class="chapter-content">
+                  <div v-html="markdownToHtml(chapterContent)" class="markdown-body"></div>
+                  <span v-if="isStreaming && !chapterCompleted[index]" class="typing-cursor">|</span>
+                </div>
+              </div>
             </div>
 
             <!-- 配图进度 -->
@@ -537,6 +541,12 @@ const router = useRouter()
 const route = useRoute()
 const loginUserStore = useLoginUserStore()
 
+// 章节缓冲区管理 (用于并行生成时独立显示)
+const chapterBuffers: Record<number, string[]> = {} // key: 章节索引, value: chunks数组
+const chapterCompleted: Record<number, boolean> = {} // key: 章节索引, value: 是否已完成
+const chapterContents = ref<string[]>([]) // 每个章节的独立内容区域
+let totalChapters = 0 // 总章节数(从大纲中获取)
+
 // 配额相关计算属性
 const isAdmin = computed(() => loginUserStore.loginUser.userRole === USER_ROLE_ADMIN)
 const quota = computed(() => loginUserStore.loginUser.quota ?? 0)
@@ -744,6 +754,13 @@ const handleSSEMessage = (msg: SSEMessage) => {
       // 大纲生成完成，切换到编辑大纲阶段
       currentPhase.value = 'OUTLINE_EDITING'
       outline.value = msg.outline || []
+      // 记录总章节数,用于后续独立显示
+      totalChapters = outline.value.length
+      // 初始化章节内容数组
+      chapterContents.value = new Array(totalChapters).fill('')
+      // 清空章节缓冲区和完成状态
+      Object.keys(chapterBuffers).forEach(key => delete chapterBuffers[parseInt(key)])
+      Object.keys(chapterCompleted).forEach(key => delete chapterCompleted[parseInt(key)])
       isCreating.value = false
       isOutlineStreaming.value = false
       break
@@ -754,11 +771,52 @@ const handleSSEMessage = (msg: SSEMessage) => {
       break
 
     case 'AGENT3_STREAMING':
-      // 正文流式输出
+      // 正文流式输出(支持并行生成的章节标识格式)
       currentPhase.value = 'CONTENT_GENERATING'
       isStreaming.value = true
-      article.value.content += msg.content || ''
-      scrollToBottom()
+
+      const content = msg.content || ''
+
+      // 检查是否是新格式: "章节索引:内容"
+      const firstColonIndex = content.indexOf(':')
+      if (firstColonIndex !== -1) {
+        const chapterIndexStr = content.substring(0, firstColonIndex)
+        const chapterIndex = parseInt(chapterIndexStr)
+
+        // 验证章节索引是否有效
+        if (!isNaN(chapterIndex) && chapterIndex >= 0 && chapterIndex < totalChapters) {
+          const actualContent = content.substring(firstColonIndex + 1)
+
+          // 将chunk存入对应章节的缓冲区
+          if (!chapterBuffers[chapterIndex]) {
+            chapterBuffers[chapterIndex] = []
+          }
+          chapterBuffers[chapterIndex].push(actualContent)
+
+          // 立即显示到对应章节的独立区域
+          tryDisplayChapters()
+        } else {
+          // 无效的章节索引,降级处理:直接显示到第一个章节
+          console.warn(`无效的章节索引: ${chapterIndexStr}, totalChapters: ${totalChapters}`)
+          chapterContents.value[0] = (chapterContents.value[0] || '') + content
+          scrollToBottom()
+        }
+      } else {
+        // 旧格式(无章节标识),直接显示到第一个章节
+        chapterContents.value[0] = (chapterContents.value[0] || '') + content
+        scrollToBottom()
+      }
+      break
+
+    case 'CHAPTER_COMPLETE':
+      // 章节生成完成
+      const completedChapterIndex = msg.chapterIndex
+      if (completedChapterIndex !== undefined && completedChapterIndex >= 0) {
+        chapterCompleted[completedChapterIndex] = true
+        console.log(`章节${completedChapterIndex}生成完成,长度:${msg.contentLength}`)
+        // 尝试显示已完成的章节
+        tryDisplayChapters()
+      }
       break
 
     case 'AGENT3_COMPLETE':
@@ -792,10 +850,16 @@ const handleSSEMessage = (msg: SSEMessage) => {
       break
 
     case 'ALL_COMPLETE':
-      // 全部完成
+      // 全部完成,强制显示剩余的章节内容
+      flushAllChapterBuffers()
+
+      // 将所有章节内容合并到 article.content
+      article.value.content = chapterContents.value.filter(c => c).join('\n\n')
+
       currentPhase.value = 'COMPLETED'
       currentStep.value = 6
       isCompleted.value = true
+      isStreaming.value = false
       message.success('文章创作完成!')
       break
 
@@ -863,6 +927,43 @@ const handleSSEComplete = () => {
   console.log('SSE连接关闭')
 }
 
+/**
+ * 多章节独立流式显示
+ * 每个章节的内容追加到自己的显示区域
+ */
+const tryDisplayChapters = () => {
+  let hasNewContent = false
+
+  // 遍历所有章节,将各章节缓冲区的内容追加到对应章节的显示区域
+  for (let chapterIndex = 0; chapterIndex < totalChapters; chapterIndex++) {
+    const buffer = chapterBuffers[chapterIndex]
+
+    // 如果该章节有未显示的chunks,一次性全部追加到该章节的内容区域
+    if (buffer && buffer.length > 0) {
+      // 将缓冲区所有chunks拼接后追加到该章节的内容
+      const chunksToDisplay = buffer.splice(0) // 取出并清空缓冲区
+      const newContent = chunksToDisplay.join('')
+
+      // 追加到对应章节的内容区域
+      chapterContents.value[chapterIndex] = (chapterContents.value[chapterIndex] || '') + newContent
+      hasNewContent = true
+    }
+  }
+
+  if (hasNewContent) {
+    scrollToBottom()
+  }
+}
+
+/**
+ * 强制显示所有剩余的章节内容(用于ALL_COMPLETE时)
+ */
+const flushAllChapterBuffers = () => {
+  // 这个函数现在不需要了,因为tryDisplayChapters已经会显示所有内容
+  // 但保留以防万一
+  tryDisplayChapters()
+}
+
 // 复制全文
 const copyContent = async () => {
   const content = article.value.fullContent || article.value.content || ''
@@ -895,6 +996,13 @@ const resetCreate = () => {
   imageProgress.value = 0
   outlineRaw.value = ''
   confirmLoading.value = false
+  
+  // 重置章节缓冲区
+  totalChapters = 0
+  chapterContents.value = []
+  Object.keys(chapterBuffers).forEach(key => delete chapterBuffers[parseInt(key)])
+  Object.keys(chapterCompleted).forEach(key => delete chapterCompleted[parseInt(key)])
+  
   article.value = {
     mainTitle: '',
     subTitle: '',
@@ -1338,6 +1446,15 @@ onBeforeUnmount(() => {
 /* 正文预览 */
 .content-preview {
   line-height: 1.8;
+}
+
+/* 章节独立显示区域 */
+.chapter-section {
+  margin-bottom: 16px;
+}
+
+.chapter-content {
+  position: relative;
 }
 
 .markdown-body {

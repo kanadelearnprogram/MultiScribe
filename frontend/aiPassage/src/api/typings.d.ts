@@ -168,6 +168,10 @@ declare namespace API {
     taskId: string;
   };
 
+  type getInfoParams = {
+    id: string;
+  };
+
   type getProgressParams = {
     taskId: string;
   };
@@ -178,6 +182,16 @@ declare namespace API {
 
   type getUserVOByIdParams = {
     id: number;
+  };
+
+  type ImageCache = {
+    cacheKey?: string;
+    sourceType?: string;
+    keywords?: string;
+    prompt?: string;
+    cosUrl?: string;
+    isFallback?: boolean;
+    hitCount?: number;
   };
 
   type ImageItem = {
@@ -221,6 +235,19 @@ declare namespace API {
     optimizeCountQuery?: boolean;
   };
 
+  type PageImageCache = {
+    records?: ImageCache[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalPage?: number;
+    totalRow?: number;
+    optimizeCountQuery?: boolean;
+  };
+
+  type pageParams = {
+    page: PageImageCache;
+  };
+
   type PageUserVO = {
     records?: UserVO[];
     pageNumber?: number;
@@ -228,6 +255,10 @@ declare namespace API {
     totalPage?: number;
     totalRow?: number;
     optimizeCountQuery?: boolean;
+  };
+
+  type removeParams = {
+    id: string;
   };
 
   type SseEmitter = {
