@@ -204,6 +204,7 @@ public class ArticleController {
                 loginUser
         );
 
+        log.info("标题已确认，开始执行阶段2生成大纲, taskId={}", request.getTaskId());
         // 异步执行阶段2：生成大纲
         articleAsyncService.executePhase2(request.getTaskId());
 

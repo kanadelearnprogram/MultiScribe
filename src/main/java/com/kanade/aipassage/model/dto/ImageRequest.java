@@ -38,6 +38,16 @@ public class ImageRequest {
     private String style;
 
     /**
+     * 文章标题（用于生成细粒度缓存键）
+     */
+    private String articleTitle;
+
+    /**
+     * 章节标题（用于生成细粒度缓存键）
+     */
+    private String sectionTitle;
+
+    /**
      * 获取有效的搜索/生成参数
      * AI 生图优先使用 prompt，图库检索使用 keywords
      *

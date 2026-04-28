@@ -149,7 +149,10 @@ public class ArticleAsyncService {
             // 推送大纲生成完成消息
             Map<String, Object> data = new HashMap<>();
             data.put("outline", state.getOutline().getSections());
+            log.info("准备推送 OUTLINE_GENERATED 消息, taskId={}, outline 大小={}", 
+                taskId, state.getOutline().getSections().size());
             sendSseMessage(taskId, SseMessageTypeEnum.OUTLINE_GENERATED, data);
+            log.info("OUTLINE_GENERATED 消息已推送, taskId={}", taskId);
 
             log.info("阶段2异步任务完成, taskId={}", taskId);
         } catch (Exception e) {
@@ -243,9 +246,14 @@ public class ArticleAsyncService {
 
 
     private void handleAgentMessage(String taskId,String message, ArticleState state){
+        log.info("收到 Agent 消息: message={}, taskId={}", message, taskId);
         Map<String,Object> data = buildMessageData(message,state);
         if (data != null){
+            log.info("准备发送 SSE 消息: type={}, taskId={}", data.get("type"), taskId);
             sseEmitterManager.send(taskId,GsonUtils.toJson(data));
+            log.info("SSE 消息已发送: type={}, taskId={}", data.get("type"), taskId);
+        } else {
+            log.warn("buildMessageData 返回 null, message={}, taskId={}", message, taskId);
         }
     }
 
@@ -266,6 +274,21 @@ public class ArticleAsyncService {
         if (message.startsWith(imageCompletePrefix)) {
             String imageJson = message.substring(imageCompletePrefix.length());
             return buildImageCompleteData(imageJson);
+        }
+
+        // 尝试解析 JSON 格式的消息（如 CHAPTER_COMPLETE）
+        if (message.trim().startsWith("{")) {
+            try {
+                Map<String, Object> jsonMessage = GsonUtils.fromJson(message, new TypeToken<Map<String, Object>>(){});
+                String type = (String) jsonMessage.get("type");
+                if (type != null) {
+                    log.info("解析到 JSON 格式消息: type={}", type);
+                    // 直接返回 JSON 消息，让前端处理
+                    return jsonMessage;
+                }
+            } catch (Exception e) {
+                log.warn("JSON 消息解析失败: {}", message, e);
+            }
         }
 
         // 处理完成消息（枚举值）
@@ -321,7 +344,9 @@ public class ArticleAsyncService {
         Map<String, Object> data = new HashMap<>();
         data.put("type", type.getValue());
         data.putAll(additionalData);
-        sseEmitterManager.send(taskId, GsonUtils.toJson(data));
+        String jsonMessage = GsonUtils.toJson(data);
+        log.debug("发送 SSE 消息: type={}, json={}", type.getValue(), jsonMessage);
+        sseEmitterManager.send(taskId, jsonMessage);
     }
 
 }

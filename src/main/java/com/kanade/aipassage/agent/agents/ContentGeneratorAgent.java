@@ -140,10 +140,18 @@ public class ContentGeneratorAgent implements NodeAction {
         }
         
         String content = fullContent.toString();
-        // 获取流式处理器
-
-
+        
         log.info("ContentGeneratorAgent 执行完成: 正文长度={}", content.length());
+
+        // 发送 AGENT3_COMPLETE 消息，通知前端正文生成完成
+        if (streamHandler != null) {
+            try {
+                streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
+                log.info("已发送 AGENT3_COMPLETE 消息");
+            } catch (Exception e) {
+                log.error("发送 AGENT3_COMPLETE 消息失败", e);
+            }
+        }
 
         return Map.of(OUTPUT_CONTENT, content);
     }

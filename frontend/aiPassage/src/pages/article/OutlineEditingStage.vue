@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 
-import {computed, nextTick, onMounted,ref} from "vue";
+import {computed, nextTick, onMounted, ref, watch} from "vue";
 import Sortable from "sortablejs";
 import {message} from "ant-design-vue";
 import {aiModifyOutline} from "@/api/articleController.ts";
@@ -145,6 +145,7 @@ interface Props {
 
 interface Emits {
   (e: 'confirm', outline: OutlineSection[]): void
+  (e: 'outline-updated', outline: OutlineSection[]): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -161,6 +162,23 @@ const outlineSections = ref<OutlineSection[]>(
       points: item.points ?? []
     }))
 )
+
+// 调试日志：打印接收到的大纲数据（生产环境可注释）
+// console.log('OutlineEditingStage 接收到 props.outline:', props.outline)
+// console.log('OutlineEditingStage 转换后的 outlineSections:', outlineSections.value)
+
+// 监听 props.outline 变化，同步更新内部状态
+watch(() => props.outline, (newOutline) => {
+  // console.log('props.outline 发生变化:', newOutline)
+  if (newOutline && newOutline.length > 0) {
+    outlineSections.value = newOutline.map((item, index) => ({
+      section: item.section ?? index + 1,
+      title: item.title ?? '',
+      points: item.points ?? []
+    }))
+    // console.log('outlineSections 已同步更新:', outlineSections.value)
+  }
+}, { deep: true })
 const outlineListRef = ref<HTMLElement | null>(null)
 const modifySuggestion = ref('')
 const aiModifying = ref(false)
@@ -248,6 +266,8 @@ const handleAiModify = async () => {
         points: item.points ?? []
       }))
       modifySuggestion.value = ''
+      // 通知父组件大纲已更新
+      emit('outline-updated', outlineSections.value)
       message.success('AI 已根据您的建议修改大纲')
     }
   } catch (error) {

@@ -188,6 +188,9 @@ public class ArticleAgentService {
                     .prompt(requirement.getPrompt())
                     .position(requirement.getPosition())
                     .type(requirement.getType())
+                    // 添加上下文信息用于生成细粒度缓存键
+                    .articleTitle(state.getTitle() != null ? state.getTitle().getMainTitle() : null)
+                    .sectionTitle(requirement.getSectionTitle())
                     .build();
 
             // 使用策略模式获取图片并统一上传到 COS

@@ -87,12 +87,24 @@ public class ImageGenerationTool {
     public ImageGenerationResult generateImageDirect(String imageSource, String keywords, String prompt,
                                                      Integer position, String type, String sectionTitle,
                                                      String placeholderId) {
+        return generateImageDirect(imageSource, keywords, prompt, position, type, sectionTitle, placeholderId, null);
+    }
+
+    /**
+     * 直接生成图片（支持文章标题上下文）
+     */
+    public ImageGenerationResult generateImageDirect(String imageSource, String keywords, String prompt,
+                                                     Integer position, String type, String sectionTitle,
+                                                     String placeholderId, String articleTitle) {
         try {
             ImageRequest imageRequest = ImageRequest.builder()
                     .keywords(keywords)
                     .prompt(prompt)
                     .position(position)
                     .type(type)
+                    // 添加上下文信息用于生成细粒度缓存键
+                    .articleTitle(articleTitle)
+                    .sectionTitle(sectionTitle)
                     .build();
 
             ImageServiceStrategy.ImageResult result = imageServiceStrategy.getImageAndUpload(imageSource, imageRequest);

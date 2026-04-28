@@ -52,10 +52,15 @@ public class ParallelImageGenerator implements NodeAction {
                 })
                 .orElse(new ArrayList<>());
 
+        // 从 State 中获取文章标题（用于细粒度缓存键）
+        String mainTitle = state.value("mainTitle")
+                .map(Object::toString)
+                .orElse(null);
+
         // 从 ThreadLocal 获取流式处理器
         Consumer<String> streamHandler = StreamHandlerContext.get();
 
-        log.info("ParallelImageGenerator 开始执行: 配图需求数量={}", imageRequirements.size());
+        log.info("ParallelImageGenerator 开始执行: 配图需求数量={}, mainTitle={}", imageRequirements.size(), mainTitle);
 
         if (imageRequirements.isEmpty()) {
             log.info("没有配图需求，跳过图片生成");
@@ -74,7 +79,7 @@ public class ParallelImageGenerator implements NodeAction {
                         )));
 
         // 并行执行不同类型的图片生成
-        List<ArticleState.ImageResult> allImages = executeParallel(groupedBySource, streamHandler);
+        List<ArticleState.ImageResult> allImages = executeParallel(groupedBySource, streamHandler, mainTitle);
 
         // 按 position 排序
         allImages.sort((a, b) -> {
@@ -94,7 +99,8 @@ public class ParallelImageGenerator implements NodeAction {
      */
     private List<ArticleState.ImageResult> executeParallel(
             Map<String, List<ArticleState.ImageRequirement>> groupedBySource,
-            Consumer<String> streamHandler) {
+            Consumer<String> streamHandler,
+            String articleTitle) {
 
         // 使用线程安全的列表收集结果
         CopyOnWriteArrayList<ArticleState.ImageResult> allImages = new CopyOnWriteArrayList<>();
@@ -120,7 +126,8 @@ public class ParallelImageGenerator implements NodeAction {
                                             req.getPosition(),
                                             req.getType(),
                                             req.getSectionTitle(),
-                                            req.getPlaceholderId()
+                                            req.getPlaceholderId(),
+                                            articleTitle  // 传递文章标题用于细粒度缓存键
                                     );
 
                             if (result.isSuccess()) {

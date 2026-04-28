@@ -161,7 +161,8 @@ public class ImageServiceStrategy {
 
     public ImageResult getImageByCache(String imageSource, ImageRequest request){
         ImageMethodEnum method = resolveMethod(imageSource);
-        String cacheKey = generateCacheKey(imageSource, getEffectiveParam(request, method));
+        // 使用细粒度缓存键，包含文章标题、章节标题等上下文信息
+        String cacheKey = generateCacheKey(imageSource, request, method);
 
         String redisKey = CACHE_PREFIX + cacheKey;
         try {
@@ -204,8 +205,8 @@ public class ImageServiceStrategy {
         });
     }
     private void saveToCache(String imageSource, ImageRequest request, String cosUrl, ImageMethodEnum method) {
-        String effectiveParam = getEffectiveParam(request, method);
-        String cacheKey = generateCacheKey(imageSource, effectiveParam);
+        // 使用细粒度缓存键
+        String cacheKey = generateCacheKey(imageSource, request, method);
         String redisKey = CACHE_PREFIX + cacheKey;
 
         // 1. 存入 MySQL (持久化)
@@ -226,9 +227,57 @@ public class ImageServiceStrategy {
             log.warn("Redis 写入失败，但 MySQL 已保存", e);
         }
     }
-    private String generateCacheKey(String sourceType, String param) {
-        String raw = sourceType + ":" + (param != null ? param.trim() : "");
-        return DigestUtil.md5Hex(raw);
+    /**
+     * 生成细粒度的缓存键
+     * 包含文章标题、章节标题、位置等上下文信息，避免不同文章共用同一张配图
+     * 
+     * @param sourceType 图片来源类型（如 pexels, nano-banana）
+     * @param request 图片请求对象
+     * @param method 图片生成方式枚举
+     * @return MD5 缓存键
+     */
+    private String generateCacheKey(String sourceType, ImageRequest request, ImageMethodEnum method) {
+        StringBuilder raw = new StringBuilder();
+        raw.append(sourceType).append(":");
+        
+        // 添加文章标题（标准化处理）
+        if (request.getArticleTitle() != null && !request.getArticleTitle().isEmpty()) {
+            raw.append(normalizeText(request.getArticleTitle())).append(":");
+        }
+        
+        // 添加章节标题
+        if (request.getSectionTitle() != null && !request.getSectionTitle().isEmpty()) {
+            raw.append(normalizeText(request.getSectionTitle())).append(":");
+        }
+        
+        // 添加关键词或提示词
+        String effectiveParam = getEffectiveParam(request, method);
+        raw.append(effectiveParam != null ? effectiveParam.trim() : "").append(":");
+        
+        // 添加位置信息（封面图、正文配图等）
+        if (request.getPosition() != null) {
+            raw.append("pos").append(request.getPosition());
+        }
+        
+        return DigestUtil.md5Hex(raw.toString());
+    }
+
+    /**
+     * 标准化文本：去除特殊字符，转为小写，限制长度
+     * 用于生成更紧凑的缓存键
+     */
+    private String normalizeText(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        // 去除标点符号、空格，转为小写
+        String normalized = text.replaceAll("[\\p{P}\\s]", "")
+                                .toLowerCase();
+        // 限制长度（使用处理后的长度，避免越界）
+        if (normalized.length() > 50) {
+            normalized = normalized.substring(0, 50);
+        }
+        return normalized;
     }
     private String getEffectiveParam(ImageRequest request, ImageMethodEnum method) {
         // AI 生成类（如 Mermaid）主要依赖 prompt，检索类主要依赖 keywords

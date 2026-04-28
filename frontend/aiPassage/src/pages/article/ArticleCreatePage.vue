@@ -38,7 +38,7 @@
       </aside>
 
       <!-- 中间：主内容区 -->
-      <main ref="mainContentRef" class="main-content">
+      <main ref="mainContentRef" @scroll="handleUserScroll" class="main-content">
         <!-- 阶段切换（带过渡动画） -->
         <Transition name="fade-slide" mode="out-in">
           <!-- 输入状态 -->
@@ -169,6 +169,7 @@
               :loading="confirmLoading"
               :task-id="taskId"
               @confirm="handleConfirmOutline"
+              @outline-updated="handleOutlineUpdated"
           />
 
           <!-- 正文生成阶段 -->
@@ -438,6 +439,34 @@
               </div>
             </div>
 
+            <!-- 配图阶段提示 -->
+            <div v-if="currentStep >= 3 && currentStep <= 5 && currentPhase === 'CONTENT_GENERATING'" class="panel-section tips-section">
+              <h4 class="panel-title">
+                <StarOutlined />
+                提示
+              </h4>
+              <div class="tips-list">
+                <div v-if="currentStep === 3" class="tip-item">
+                  <div class="tip-icon">🎨</div>
+                  <div class="tip-content">
+                    <div class="tip-desc">正文已生成，AI 正在分析最佳配图位置和风格</div>
+                  </div>
+                </div>
+                <div v-else-if="currentStep === 4" class="tip-item">
+                  <div class="tip-icon">🖼️</div>
+                  <div class="tip-content">
+                    <div class="tip-desc">AI 正在为您匹配高清无版权配图，请稍候...</div>
+                  </div>
+                </div>
+                <div v-else-if="currentStep === 5" class="tip-item">
+                  <div class="tip-icon">✨</div>
+                  <div class="tip-content">
+                    <div class="tip-desc">配图已完成，AI 正在将图片插入文章合适位置</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- 操作按钮 -->
             <div v-if="currentPhase === 'COMPLETED'" class="panel-section">
               <h4 class="panel-title">
@@ -650,6 +679,26 @@ const parsedOutline = computed<OutlineItem[]>(() => {
 // 内容区域引用（用于自动滚动）
 const mainContentRef = ref<HTMLElement | null>(null)
 
+// 智能滚动相关状态
+let isUserScrolling = false // 用户是否正在手动滚动
+let scrollThreshold = 50 // 距离底部50px以内视为"在底部"
+
+/**
+ * 检查是否在底部
+ */
+const isAtBottom = (): boolean => {
+  if (!mainContentRef.value) return true
+  const { scrollTop, scrollHeight, clientHeight } = mainContentRef.value
+  return scrollHeight - scrollTop - clientHeight < scrollThreshold
+}
+
+/**
+ * 处理用户滚动事件
+ */
+const handleUserScroll = () => {
+  isUserScrolling = !isAtBottom()
+}
+
 // 配图进度
 const imageCount = ref(0)
 const totalImages = ref(5)
@@ -671,10 +720,10 @@ const markdownToHtml = (markdown: string | undefined) => {
   return marked(markdown || '')
 }
 
-// 自动滚动到底部
+// 自动滚动到底部（仅在用户未手动滚动时）
 const scrollToBottom = () => {
   nextTick(() => {
-    if (mainContentRef.value) {
+    if (mainContentRef.value && !isUserScrolling) {
       mainContentRef.value.scrollTop = mainContentRef.value.scrollHeight
     }
   })
@@ -726,7 +775,9 @@ const startCreate = async () => {
 
 // 处理 SSE 消息
 const handleSSEMessage = (msg: SSEMessage) => {
-  console.log('SSE消息:', msg)
+  console.log('=== 收到 SSE 消息 ===')
+  console.log('消息类型:', msg.type)
+  console.log('完整消息:', JSON.stringify(msg, null, 2))
 
   switch (msg.type) {
     case 'AGENT1_COMPLETE':
@@ -752,8 +803,16 @@ const handleSSEMessage = (msg: SSEMessage) => {
 
     case 'OUTLINE_GENERATED':
       // 大纲生成完成，切换到编辑大纲阶段
+      // console.log('收到 OUTLINE_GENERATED 消息:', msg)
+      // console.log('msg.outline 类型:', typeof msg.outline)
+      // console.log('msg.outline 值:', JSON.stringify(msg.outline))
+      
       currentPhase.value = 'OUTLINE_EDITING'
       outline.value = msg.outline || []
+      
+      // console.log('outline.value 已更新为:', outline.value)
+      // console.log('outline.value.length:', outline.value.length)
+      
       // 记录总章节数,用于后续独立显示
       totalChapters = outline.value.length
       // 初始化章节内容数组
@@ -823,6 +882,8 @@ const handleSSEMessage = (msg: SSEMessage) => {
       // 正文完成，进入配图分析步骤
       isStreaming.value = false
       currentStep.value = 3
+      console.log('AGENT3_COMPLETE: currentStep 设置为', currentStep.value)
+      // 注意：不改变 currentPhase，保持在 CONTENT_GENERATING 以继续显示正文内容
       break
 
     case 'AGENT4_COMPLETE':

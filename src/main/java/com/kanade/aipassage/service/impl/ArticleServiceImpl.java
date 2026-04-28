@@ -166,7 +166,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
 
         List<ArticleState.OutlineSection> modifyOutline = articleAgentService.aiModifyOutline(article.getMainTitle(),article.getSubTitle(),current,modifySuggestion);
 
-        return List.of();
+        return modifyOutline;
     }
 
     @Override
