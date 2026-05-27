@@ -5,7 +5,7 @@
         <RouterLink to="/" class="logo-link">
           <div class="logo-wrapper">
             <img src="@/assets/logo.svg" alt="Logo" class="logo-img" />
-            <h1 class="site-title">AI文章创作器</h1>
+            <h1 class="site-title">AI文章生成器</h1>
           </div>
         </RouterLink>
       </div>

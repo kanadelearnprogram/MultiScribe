@@ -7,22 +7,22 @@
 ### 首页
 
 <!-- 截图：首页整体界面，展示导航栏、Banner、功能入口等 -->
-![首页](docs/screenshots/home.png)
+![首页](docs/img.png)
 
 ### 文章创作 — 输入选题
 
 <!-- 截图：文章创建页面，展示选题输入框、风格选择、配图方式勾选等 -->
-![输入选题](docs/screenshots/create-topic.png)
+![输入选题](docs/img_1.png)
 
 ### 阶段一：AI 生成标题方案
 
 <!-- 截图：标题生成完成后的界面，展示 3-5 个标题选项（含主标题+副标题），用户可选择一个 -->
-![标题生成](docs/screenshots/phase1-titles.png)
+![标题生成](docs/img_2.png)
 
 ### 阶段二：AI 生成大纲 + 用户编辑
 
 <!-- 截图：大纲编辑界面，左侧展示 AI 生成的文章大纲（章节+要点），右侧支持手动编辑或输入修改建议让 AI 辅助修改 -->
-![大纲编辑](docs/screenshots/phase2-outline.png)
+![大纲编辑](docs/img_4.png)
 
 ### 阶段三：正文创作 + 实时流式输出
 
@@ -32,22 +32,22 @@
 ### 配图生成
 
 <!-- 截图：配图生成过程界面，展示各章节配图的生成进度，可看到不同来源（Pexels、Mermaid 图表、AI 生图等）的并行生成状态 -->
-![配图生成](docs/screenshots/phase3-images.png)
+![配图生成](docs/img_5.png)
 
 ### 文章详情 — 图文合并最终效果
 
 <!-- 截图：文章详情页，展示图文合并后的完整文章，包含封面图、正文配图、Mermaid 图表、Emoji 装饰等 -->
-![文章详情](docs/screenshots/article-detail.png)
+![文章详情](docs/img_6.png)
 
 ### 文章管理列表
 
 <!-- 截图：文章列表页，展示分页列表、状态筛选（待处理/生成中/已完成/失败）、操作按钮等 -->
-![文章列表](docs/screenshots/article-list.png)
+![文章列表](docs/img_7.png)
 
 ### 管理后台 — 用户管理
 
 <!-- 截图：管理员用户管理页面，展示用户列表、角色管理、分页等 -->
-![用户管理](docs/screenshots/admin-users.png)
+![用户管理](docs/img_8.png)
 
 ---
 
