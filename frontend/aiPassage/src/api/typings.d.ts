@@ -71,6 +71,7 @@ declare namespace API {
     fullContent?: string;
     coverImage?: string;
     images?: ImageItem[];
+    style?: string;
     status?: string;
     phase?: string;
     errorMessage?: string;
@@ -274,7 +275,6 @@ declare namespace API {
     avgDurationMs?: number;
     activeUserCount?: number;
     totalUserCount?: number;
-    vipUserCount?: number;
     quotaUsed?: number;
     successRate?: number;
   };
@@ -297,7 +297,6 @@ declare namespace API {
     createTime?: string;
     updateTime?: string;
     isDelete?: number;
-    vipTime?: string;
   };
 
   type UserAddRequest = {

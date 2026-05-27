@@ -2,6 +2,14 @@
  * 文章相关常量定义
  */
 
+// 文章风格映射
+export const STYLE_MAP: Record<string, string> = {
+  tech: '技术',
+  emotional: '情感',
+  educational: '教育',
+  humorous: '幽默',
+}
+
 // 文章状态枚举
 export enum ArticleStatus {
   PENDING = 'PENDING',
@@ -30,7 +38,7 @@ export const STATUS_TAG_COLOR_MAP: Record<string, string> = {
 export const STATUS_COLOR_MAP: Record<string, string> = {
   [ArticleStatus.PENDING]: '#6B7280',
   [ArticleStatus.PROCESSING]: '#3B82F6',
-  [ArticleStatus.COMPLETED]: '#22C55E',
+  [ArticleStatus.COMPLETED]: '#10B981',
   [ArticleStatus.FAILED]: '#EF4444',
 }
 

@@ -69,7 +69,7 @@ const features = [
     icon: FileTextOutlined,
     title: '智能生成标题',
     description: 'AI 自动分析选题，生成吸引眼球的爆款标题',
-    color: '#22C55E'
+    color: '#6366F1'
   },
   {
     icon: OrderedListOutlined,
@@ -261,8 +261,8 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: var(--radius-full);
   font-size: 14px;
   font-weight: 500;
@@ -330,7 +330,7 @@ onMounted(() => {
   background: var(--gradient-primary) !important;
   border: none !important;
   color: white !important;
-  box-shadow: var(--shadow-green) !important;
+  box-shadow: var(--shadow-primary) !important;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -344,7 +344,7 @@ onMounted(() => {
   background: var(--gradient-primary) !important;
   border: none !important;
   color: white !important;
-  box-shadow: var(--shadow-green) !important;
+  box-shadow: var(--shadow-primary) !important;
   opacity: 0.92;
 }
 
@@ -376,7 +376,7 @@ onMounted(() => {
 .section-badge {
   display: inline-block;
   padding: 6px 14px;
-  background: rgba(34, 197, 94, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   border-radius: var(--radius-full);
   font-size: 13px;
   font-weight: 600;
@@ -579,7 +579,7 @@ onMounted(() => {
 }
 
 .article-status.status-completed {
-  background: rgba(34, 197, 94, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   color: var(--color-primary-dark);
 }
 

@@ -82,6 +82,11 @@ public class ArticleVO implements Serializable {
     private List<ImageItem> images;
 
     /**
+     * 文章风格
+     */
+    private String style;
+
+    /**
      * 状态
      */
     private String status;

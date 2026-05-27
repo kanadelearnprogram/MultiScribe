@@ -290,7 +290,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article>  imp
     }
 
     private void checkArticlePermission(Article article, User loginUser) {
-
+        if (article == null || loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        if (ADMIN_ROLE.equals(loginUser.getUserRole())) {
+            return;
+        }
+        if (!article.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作此文章");
+        }
     }
     private List<String> processImageMethods(List<String> enabledImageMethods, User loginUser) {
         // 如果用户已选择，直接返回

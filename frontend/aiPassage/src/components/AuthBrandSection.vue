@@ -46,7 +46,7 @@ import { CheckCircleOutlined } from '@ant-design/icons-vue'
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 50%, #15803D 100%);
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 50%, #3730A3 100%);
 }
 
 .brand-bg::before {

@@ -21,11 +21,11 @@ const router = createRouter({
             name: '用户注册',
             component: UserRegisterPage,
         },
-        // {
-        //     path: '/admin/userManage',
-        //     name: '用户管理',
-        //     component: () => import('@/pages/admin/UserManagePage.vue'),
-        // },
+        {
+            path: '/admin/userManage',
+            name: '用户管理',
+            component: () => import('@/pages/admin/UserManagePage.vue'),
+        },
         {
             path: '/create',
             name: '创作文章',

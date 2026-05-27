@@ -419,7 +419,7 @@ onMounted(() => {
     font-size: 13px;
     transition: all var(--transition-fast);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-green);
+    box-shadow: var(--shadow-primary);
 
     &:hover {
       opacity: 0.9;

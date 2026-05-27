@@ -1,7 +1,7 @@
 /**
  * 文章相关工具函数
  */
-import { STATUS_TEXT_MAP, STATUS_TAG_COLOR_MAP, STATUS_COLOR_MAP } from '@/constants/article'
+import { STATUS_TEXT_MAP, STATUS_TAG_COLOR_MAP, STATUS_COLOR_MAP, STYLE_MAP } from '@/constants/article'
 
 /**
  * 获取状态文本
@@ -25,6 +25,15 @@ export const getStatusTagColor = (status: string): string => {
  */
 export const getStatusColor = (status: string): string => {
   return STATUS_COLOR_MAP[status] || '#999'
+}
+
+/**
+ * 获取文章风格文本
+ * @param style 风格值
+ */
+export const getStyleText = (style?: string): string => {
+  if (!style) return '-'
+  return STYLE_MAP[style] || style
 }
 
 /**

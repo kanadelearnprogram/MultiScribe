@@ -187,7 +187,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 50%, #15803D 100%);
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 50%, #3730A3 100%);
 }
 
 .brand-bg::before {
@@ -310,7 +310,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 .form-input:focus,
 .form-input:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .form-input :deep(.ant-input) {
@@ -330,7 +330,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   background: var(--gradient-primary) !important;
   border: none !important;
   color: white !important;
-  box-shadow: var(--shadow-green) !important;
+  box-shadow: var(--shadow-primary) !important;
   transition: opacity var(--transition-normal) !important;
 }
 
@@ -340,7 +340,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   background: var(--gradient-primary) !important;
   border: none !important;
   color: white !important;
-  box-shadow: var(--shadow-green) !important;
+  box-shadow: var(--shadow-primary) !important;
   opacity: 0.92;
 }
 

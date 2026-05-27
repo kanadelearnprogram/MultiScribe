@@ -14,47 +14,47 @@ provide('locale', zhCN)
 </template>
 
 <style>
-/* 引入 Google Fonts - Geometric Modern */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap');
+/* 引入 Google Fonts - Modern Professional */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
 
-/* 全局CSS变量 - 清新绿色配色方案 */
+/* 全局CSS变量 - 靛蓝紫色配色方案 */
 :root {
-  /* 品牌色 - 绿色系 */
-  --color-primary: #22C55E;
-  --color-primary-light: #4ADE80;
-  --color-primary-dark: #16A34A;
-  --color-secondary: #0F172A;
-  --color-secondary-light: #334155;
+  /* 品牌色 - 靛蓝系 */
+  --color-primary: #6366F1;
+  --color-primary-light: #818CF8;
+  --color-primary-dark: #4F46E5;
+  --color-secondary: #1E1B4B;
+  --color-secondary-light: #312E81;
 
   /* 功能色 */
-  --color-cta: #22C55E;
-  --color-success: #22C55E;
-  --color-warning: #EAB308;
+  --color-cta: #10B981;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
   --color-error: #EF4444;
   --color-info: #3B82F6;
 
   /* 中性色 */
   --color-background: #FFFFFF;
-  --color-background-secondary: #F8FAFC;
-  --color-background-tertiary: #F1F5F9;
-  --color-background-dark: #0F172A;
-  --color-text: #0F172A;
+  --color-background-secondary: #F5F3FF;
+  --color-background-tertiary: #EDE9FE;
+  --color-background-dark: #1E1B4B;
+  --color-text: #1E1B4B;
   --color-text-secondary: #475569;
   --color-text-muted: #94A3B8;
   --color-border: #E2E8F0;
   --color-border-light: #F1F5F9;
 
   /* 渐变 */
-  --gradient-primary: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-  --gradient-hero: linear-gradient(180deg, #DCFCE7 0%, #FFFFFF 100%);
-  --gradient-hero-dark: linear-gradient(180deg, #166534 0%, #14532D 100%);
+  --gradient-primary: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  --gradient-hero: linear-gradient(180deg, #EEF2FF 0%, #FFFFFF 100%);
+  --gradient-hero-dark: linear-gradient(180deg, #312E81 0%, #1E1B4B 100%);
 
   /* 纯色背景 */
-  --bg-primary: #22C55E;
-  --bg-primary-hover: #16A34A;
-  --bg-dark: #0F172A;
-  --bg-dark-hover: #1E293B;
-  --bg-success: #22C55E;
+  --bg-primary: #6366F1;
+  --bg-primary-hover: #4F46E5;
+  --bg-dark: #1E1B4B;
+  --bg-dark-hover: #312E81;
+  --bg-success: #10B981;
 
   /* 阴影 */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -62,8 +62,8 @@ provide('locale', zhCN)
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(34, 197, 94, 0.15);
-  --shadow-green: 0 4px 14px rgba(34, 197, 94, 0.25);
+  --shadow-card-hover: 0 8px 24px rgba(99, 102, 241, 0.15);
+  --shadow-primary: 0 4px 14px rgba(99, 102, 241, 0.25);
 
   /* 圆角 */
   --radius-sm: 6px;
@@ -80,7 +80,7 @@ provide('locale', zhCN)
 
   /* 毛玻璃 */
   --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-bg-green: rgba(220, 252, 231, 0.8);
+  --glass-bg-tint: rgba(238, 242, 255, 0.8);
   --glass-blur: blur(12px);
 }
 
@@ -92,7 +92,7 @@ provide('locale', zhCN)
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Helvetica Neue', sans-serif;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -106,7 +106,7 @@ html {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* 全局链接样式 */
@@ -130,13 +130,13 @@ a:hover {
 .ant-btn-primary {
   background: var(--bg-primary);
   border-color: var(--bg-primary);
-  box-shadow: var(--shadow-green);
+  box-shadow: var(--shadow-primary);
 }
 
 .ant-btn-primary:not(:disabled):hover {
   background: var(--bg-primary-hover);
   border-color: var(--bg-primary-hover);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 /* 全局卡片增强 */
@@ -157,7 +157,7 @@ button,
 
 /* 选中状态 */
 ::selection {
-  background: rgba(34, 197, 94, 0.2);
+  background: rgba(99, 102, 241, 0.2);
   color: var(--color-text);
 }
 
@@ -210,7 +210,7 @@ button,
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1) !important;
 }
 
 .ant-input:hover {
